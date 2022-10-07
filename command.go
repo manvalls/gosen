@@ -52,3 +52,60 @@ type loadScriptCommand struct {
 	scriptURL string
 	async     bool
 }
+
+type waitCommand struct {
+	event string
+}
+
+type attrCommand struct {
+	name  string
+	value string
+}
+
+type rmAttrCommand struct {
+	name string
+}
+
+type addToAttrCommand struct {
+	name  string
+	value string
+}
+
+type rmFromAttrCommand struct {
+	name  string
+	value string
+}
+
+type addClassCommand struct {
+	class string
+}
+
+type rmClassCommand struct {
+	class string
+}
+
+type removeCommand struct{}
+
+type emptyCommand struct{}
+
+type replaceWithCommand struct {
+	elementId uint
+}
+
+type insertBeforeCommand struct {
+	childId uint
+	refId   uint
+}
+
+type insertAfterCommand struct {
+	childId uint
+	refId   uint
+}
+
+type appendCommand struct {
+	childId uint
+}
+
+type prependCommand struct {
+	childId uint
+}

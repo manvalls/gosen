@@ -1,3 +1,3 @@
 package gosen
 
-type Template interface{}
+type Template struct{}

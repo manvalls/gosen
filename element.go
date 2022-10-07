@@ -81,7 +81,74 @@ func (e Element) HTML(html Template) Element {
 	return e
 }
 
-// TODO: attributes, append, remove, insertBefore, replace, etc.
+// Attributes
+
+func (e Element) Attr(name string, value string) Element {
+	e.sender.sendCommand(e.id, attrCommand{name, value})
+	return e
+}
+
+func (e Element) RmAttr(name string) Element {
+	e.sender.sendCommand(e.id, rmAttrCommand{name})
+	return e
+}
+
+func (e Element) AddToAttr(name string, value string) Element {
+	e.sender.sendCommand(e.id, addToAttrCommand{name, value})
+	return e
+}
+
+func (e Element) RmFromAttr(name string, value string) Element {
+	e.sender.sendCommand(e.id, rmFromAttrCommand{name, value})
+	return e
+}
+
+func (e Element) AddClass(name string) Element {
+	e.sender.sendCommand(e.id, addClassCommand{name})
+	return e
+}
+
+func (e Element) RmClass(name string) Element {
+	e.sender.sendCommand(e.id, rmClassCommand{name})
+	return e
+}
+
+// Element manipulation
+
+func (e Element) Remove() Element {
+	e.sender.sendCommand(e.id, removeCommand{})
+	return e
+}
+
+func (e Element) Empty() Element {
+	e.sender.sendCommand(e.id, emptyCommand{})
+	return e
+}
+
+func (e Element) ReplaceWith(otherElement Element) Element {
+	e.sender.sendCommand(e.id, replaceWithCommand{otherElement.id})
+	return e
+}
+
+func (e Element) InsertBefore(child Element, ref Element) Element {
+	e.sender.sendCommand(e.id, insertBeforeCommand{child.id, ref.id})
+	return e
+}
+
+func (e Element) InsertAfter(child Element, ref Element) Element {
+	e.sender.sendCommand(e.id, insertAfterCommand{child.id, ref.id})
+	return e
+}
+
+func (e Element) Append(child Element) Element {
+	e.sender.sendCommand(e.id, appendCommand{child.id})
+	return e
+}
+
+func (e Element) Prepend(child Element) Element {
+	e.sender.sendCommand(e.id, prependCommand{child.id})
+	return e
+}
 
 // Scripts
 
@@ -92,5 +159,10 @@ func (e Element) LoadScript(scriptURL string) Element {
 
 func (e Element) LoadScriptAsync(scriptURL string) Element {
 	e.sender.sendCommand(e.id, loadScriptCommand{scriptURL, true})
+	return e
+}
+
+func (e Element) Wait(event string) Element {
+	e.sender.sendCommand(e.id, waitCommand{event})
 	return e
 }
