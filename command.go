@@ -104,3 +104,23 @@ type appendCommand struct {
 type prependCommand struct {
 	childId uint
 }
+
+type runCommand struct {
+	url string
+}
+
+type listenCommand struct {
+	url string
+}
+
+type asyncCommand struct {
+	url string
+}
+
+type deferCommand struct {
+	url string
+}
+
+type onceCommand struct {
+	url string
+}

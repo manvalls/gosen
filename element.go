@@ -156,3 +156,28 @@ func (e Element) Wait(event string) Element {
 	e.sender.sendCommand(e.id, waitCommand{event})
 	return e
 }
+
+func (e Element) Run(url string) Element {
+	e.sender.sendCommand(e.id, runCommand{url})
+	return e
+}
+
+func (e Element) Listen(url string) Element {
+	e.sender.sendCommand(e.id, listenCommand{url})
+	return e
+}
+
+func (e Element) Async(url string) Element {
+	e.sender.sendCommand(e.id, asyncCommand{url})
+	return e
+}
+
+func (e Element) Defer(url string) Element {
+	e.sender.sendCommand(e.id, deferCommand{url})
+	return e
+}
+
+func (e Element) Once(url string) Element {
+	e.sender.sendCommand(e.id, onceCommand{url})
+	return e
+}
