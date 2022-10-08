@@ -48,11 +48,6 @@ type htmlCommand struct {
 	html Template
 }
 
-type loadScriptCommand struct {
-	scriptURL string
-	async     bool
-}
-
 type waitCommand struct {
 	event string
 }

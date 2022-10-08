@@ -150,17 +150,7 @@ func (e Element) Prepend(child Element) Element {
 	return e
 }
 
-// Scripts
-
-func (e Element) LoadScript(scriptURL string) Element {
-	e.sender.sendCommand(e.id, loadScriptCommand{scriptURL, false})
-	return e
-}
-
-func (e Element) LoadScriptAsync(scriptURL string) Element {
-	e.sender.sendCommand(e.id, loadScriptCommand{scriptURL, true})
-	return e
-}
+// Misc
 
 func (e Element) Wait(event string) Element {
 	e.sender.sendCommand(e.id, waitCommand{event})
