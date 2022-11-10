@@ -8,6 +8,11 @@ type transactionCommand struct {
 	commands []interface{}
 }
 
+type scopeCommand struct {
+	commands []interface{}
+	id       string
+}
+
 type selectorCommand struct {
 	id       uint
 	selector string
