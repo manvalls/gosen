@@ -39,12 +39,6 @@ func (e Node) Content() Node {
 
 // Creation
 
-func (e Node) Create(template Template) Node {
-	nextId := e.getNextId()
-	e.sender.sendCommand(e.id, createCommand{nextId, template})
-	return Node{nextId, e.nextId, e.mux, e.sender}
-}
-
 func (e Node) Fragment(template Template) Node {
 	nextId := e.getNextId()
 	e.sender.sendCommand(e.id, fragmentCommand{nextId, template})

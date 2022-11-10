@@ -24,11 +24,6 @@ type contentCommand struct {
 	id uint
 }
 
-type createCommand struct {
-	id       uint
-	template Template
-}
-
 type fragmentCommand struct {
 	id       uint
 	template Template
