@@ -1,55 +1,60 @@
 package gosen
 
+import "sync"
+
 type Element struct {
 	id     uint
 	nextId *uint
+	mux    *sync.Mutex
 	sender commandSender
+}
+
+func (e Element) getNextId() uint {
+	e.mux.Lock()
+	defer e.mux.Unlock()
+	nextId := *e.nextId
+	*e.nextId++
+	return nextId
 }
 
 // Selectors
 
 func (e Element) S(selector string, args ...interface{}) Element {
-	nextId := *e.nextId
-	*e.nextId++
+	nextId := e.getNextId()
 	e.sender.sendCommand(e.id, selectorCommand{nextId, selector, args})
-	return Element{nextId, e.nextId, e.sender}
+	return Element{nextId, e.nextId, e.mux, e.sender}
 }
 
 func (e Element) All(selector string, args ...interface{}) Element {
-	nextId := *e.nextId
-	*e.nextId++
+	nextId := e.getNextId()
 	e.sender.sendCommand(e.id, selectorAllCommand{nextId, selector, args})
-	return Element{nextId, e.nextId, e.sender}
+	return Element{nextId, e.nextId, e.mux, e.sender}
 }
 
 func (e Element) Content() Element {
-	nextId := *e.nextId
-	*e.nextId++
+	nextId := e.getNextId()
 	e.sender.sendCommand(e.id, contentCommand{nextId})
-	return Element{nextId, e.nextId, e.sender}
+	return Element{nextId, e.nextId, e.mux, e.sender}
 }
 
 // Creation
 
 func (e Element) Create(template Template) Element {
-	nextId := *e.nextId
-	*e.nextId++
+	nextId := e.getNextId()
 	e.sender.sendCommand(e.id, createCommand{nextId, template})
-	return Element{nextId, e.nextId, e.sender}
+	return Element{nextId, e.nextId, e.mux, e.sender}
 }
 
 func (e Element) Fragment(template Template) Element {
-	nextId := *e.nextId
-	*e.nextId++
+	nextId := e.getNextId()
 	e.sender.sendCommand(e.id, fragmentCommand{nextId, template})
-	return Element{nextId, e.nextId, e.sender}
+	return Element{nextId, e.nextId, e.mux, e.sender}
 }
 
 func (e Element) Clone() Element {
-	nextId := *e.nextId
-	*e.nextId++
+	nextId := e.getNextId()
 	e.sender.sendCommand(e.id, cloneCommand{nextId})
-	return Element{nextId, e.nextId, e.sender}
+	return Element{nextId, e.nextId, e.mux, e.sender}
 }
 
 // InnerText and InnerHTML

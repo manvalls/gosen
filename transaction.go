@@ -33,7 +33,7 @@ func (e Element) Tx() Transaction {
 		mux:      sync.Mutex{},
 	}
 
-	return Transaction{Element{nextId, e.nextId, b}, b}
+	return Transaction{Element{nextId, e.nextId, e.mux, b}, b}
 }
 
 func (t Transaction) Commit() {
