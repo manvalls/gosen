@@ -6,23 +6,6 @@ type Element struct {
 	sender commandSender
 }
 
-type Transaction struct {
-	Element
-}
-
-// Transactions
-
-func (e Element) Tx() Transaction {
-	nextId := *e.nextId
-	*e.nextId++
-	e.sender.sendCommand(e.id, transactionCommand{nextId})
-	return Transaction{Element{nextId, e.nextId, e.sender}}
-}
-
-func (t Transaction) Commit() {
-	t.sender.sendCommand(t.id, commitCommand{})
-}
-
 // Selectors
 
 func (e Element) S(selector string, args ...interface{}) Element {

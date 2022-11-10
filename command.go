@@ -5,10 +5,8 @@ type commandSender interface {
 }
 
 type transactionCommand struct {
-	nextId uint
+	commands []interface{}
 }
-
-type commitCommand struct{}
 
 type selectorCommand struct {
 	id       uint
