@@ -6,7 +6,7 @@ type App struct {
 }
 
 type Page struct {
-	Element
+	Node
 	Header     http.Header
 	StatusCode int
 }

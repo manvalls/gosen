@@ -20,11 +20,11 @@ func (b *transactionBuffer) sendCommand(id uint, command interface{}) {
 }
 
 type Transaction struct {
-	Element
+	Node
 	buffer *transactionBuffer
 }
 
-func (e Element) Tx() Transaction {
+func (e Node) Tx() Transaction {
 	nextId := *e.nextId
 	*e.nextId++
 
@@ -33,7 +33,7 @@ func (e Element) Tx() Transaction {
 		mux:      sync.Mutex{},
 	}
 
-	return Transaction{Element{nextId, e.nextId, e.mux, b}, b}
+	return Transaction{Node{nextId, e.nextId, e.mux, b}, b}
 }
 
 func (t Transaction) Commit() {

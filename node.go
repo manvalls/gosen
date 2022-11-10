@@ -2,14 +2,14 @@ package gosen
 
 import "sync"
 
-type Element struct {
+type Node struct {
 	id     uint
 	nextId *uint
 	mux    *sync.Mutex
 	sender commandSender
 }
 
-func (e Element) getNextId() uint {
+func (e Node) getNextId() uint {
 	e.mux.Lock()
 	defer e.mux.Unlock()
 	nextId := *e.nextId
@@ -19,153 +19,153 @@ func (e Element) getNextId() uint {
 
 // Selectors
 
-func (e Element) S(selector string, args ...interface{}) Element {
+func (e Node) S(selector string, args ...interface{}) Node {
 	nextId := e.getNextId()
 	e.sender.sendCommand(e.id, selectorCommand{nextId, selector, args})
-	return Element{nextId, e.nextId, e.mux, e.sender}
+	return Node{nextId, e.nextId, e.mux, e.sender}
 }
 
-func (e Element) All(selector string, args ...interface{}) Element {
+func (e Node) All(selector string, args ...interface{}) Node {
 	nextId := e.getNextId()
 	e.sender.sendCommand(e.id, selectorAllCommand{nextId, selector, args})
-	return Element{nextId, e.nextId, e.mux, e.sender}
+	return Node{nextId, e.nextId, e.mux, e.sender}
 }
 
-func (e Element) Content() Element {
+func (e Node) Content() Node {
 	nextId := e.getNextId()
 	e.sender.sendCommand(e.id, contentCommand{nextId})
-	return Element{nextId, e.nextId, e.mux, e.sender}
+	return Node{nextId, e.nextId, e.mux, e.sender}
 }
 
 // Creation
 
-func (e Element) Create(template Template) Element {
+func (e Node) Create(template Template) Node {
 	nextId := e.getNextId()
 	e.sender.sendCommand(e.id, createCommand{nextId, template})
-	return Element{nextId, e.nextId, e.mux, e.sender}
+	return Node{nextId, e.nextId, e.mux, e.sender}
 }
 
-func (e Element) Fragment(template Template) Element {
+func (e Node) Fragment(template Template) Node {
 	nextId := e.getNextId()
 	e.sender.sendCommand(e.id, fragmentCommand{nextId, template})
-	return Element{nextId, e.nextId, e.mux, e.sender}
+	return Node{nextId, e.nextId, e.mux, e.sender}
 }
 
-func (e Element) Clone() Element {
+func (e Node) Clone() Node {
 	nextId := e.getNextId()
 	e.sender.sendCommand(e.id, cloneCommand{nextId})
-	return Element{nextId, e.nextId, e.mux, e.sender}
+	return Node{nextId, e.nextId, e.mux, e.sender}
 }
 
 // InnerText and InnerHTML
 
-func (e Element) Text(text string) Element {
+func (e Node) Text(text string) Node {
 	e.sender.sendCommand(e.id, textCommand{text})
 	return e
 }
 
-func (e Element) HTML(html Template) Element {
+func (e Node) HTML(html Template) Node {
 	e.sender.sendCommand(e.id, htmlCommand{html})
 	return e
 }
 
 // Attributes
 
-func (e Element) Attr(name string, value string) Element {
+func (e Node) Attr(name string, value string) Node {
 	e.sender.sendCommand(e.id, attrCommand{name, value})
 	return e
 }
 
-func (e Element) RmAttr(name string) Element {
+func (e Node) RmAttr(name string) Node {
 	e.sender.sendCommand(e.id, rmAttrCommand{name})
 	return e
 }
 
-func (e Element) AddToAttr(name string, value string) Element {
+func (e Node) AddToAttr(name string, value string) Node {
 	e.sender.sendCommand(e.id, addToAttrCommand{name, value})
 	return e
 }
 
-func (e Element) RmFromAttr(name string, value string) Element {
+func (e Node) RmFromAttr(name string, value string) Node {
 	e.sender.sendCommand(e.id, rmFromAttrCommand{name, value})
 	return e
 }
 
-func (e Element) AddClass(name string) Element {
+func (e Node) AddClass(name string) Node {
 	e.sender.sendCommand(e.id, addClassCommand{name})
 	return e
 }
 
-func (e Element) RmClass(name string) Element {
+func (e Node) RmClass(name string) Node {
 	e.sender.sendCommand(e.id, rmClassCommand{name})
 	return e
 }
 
-// Element manipulation
+// Node manipulation
 
-func (e Element) Remove() Element {
+func (e Node) Remove() Node {
 	e.sender.sendCommand(e.id, removeCommand{})
 	return e
 }
 
-func (e Element) Empty() Element {
+func (e Node) Empty() Node {
 	e.sender.sendCommand(e.id, emptyCommand{})
 	return e
 }
 
-func (e Element) ReplaceWith(otherElement Element) Element {
-	e.sender.sendCommand(e.id, replaceWithCommand{otherElement.id})
+func (e Node) ReplaceWith(otherNode Node) Node {
+	e.sender.sendCommand(e.id, replaceWithCommand{otherNode.id})
 	return e
 }
 
-func (e Element) InsertBefore(child Element, ref Element) Element {
+func (e Node) InsertBefore(child Node, ref Node) Node {
 	e.sender.sendCommand(e.id, insertBeforeCommand{child.id, ref.id})
 	return e
 }
 
-func (e Element) InsertAfter(child Element, ref Element) Element {
+func (e Node) InsertAfter(child Node, ref Node) Node {
 	e.sender.sendCommand(e.id, insertAfterCommand{child.id, ref.id})
 	return e
 }
 
-func (e Element) Append(child Element) Element {
+func (e Node) Append(child Node) Node {
 	e.sender.sendCommand(e.id, appendCommand{child.id})
 	return e
 }
 
-func (e Element) Prepend(child Element) Element {
+func (e Node) Prepend(child Node) Node {
 	e.sender.sendCommand(e.id, prependCommand{child.id})
 	return e
 }
 
 // Misc
 
-func (e Element) Wait(event string) Element {
+func (e Node) Wait(event string) Node {
 	e.sender.sendCommand(e.id, waitCommand{event})
 	return e
 }
 
-func (e Element) Run(url string) Element {
+func (e Node) Run(url string) Node {
 	e.sender.sendCommand(e.id, runCommand{url})
 	return e
 }
 
-func (e Element) Listen(url string) Element {
+func (e Node) Listen(url string) Node {
 	e.sender.sendCommand(e.id, listenCommand{url})
 	return e
 }
 
-func (e Element) Async(url string) Element {
+func (e Node) Async(url string) Node {
 	e.sender.sendCommand(e.id, asyncCommand{url})
 	return e
 }
 
-func (e Element) Defer(url string) Element {
+func (e Node) Defer(url string) Node {
 	e.sender.sendCommand(e.id, deferCommand{url})
 	return e
 }
 
-func (e Element) Once(url string) Element {
+func (e Node) Once(url string) Node {
 	e.sender.sendCommand(e.id, onceCommand{url})
 	return e
 }
