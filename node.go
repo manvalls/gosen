@@ -134,8 +134,8 @@ func (e Node) Prepend(child Node) Node {
 
 // Misc
 
-func (e Node) Wait(event string) Node {
-	e.sender.sendCommand(e.id, waitCommand{event})
+func (e Node) Wait(event string, timeout uint) Node {
+	e.sender.sendCommand(e.id, waitCommand{event, timeout})
 	return e
 }
 

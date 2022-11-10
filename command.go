@@ -47,7 +47,8 @@ type htmlCommand struct {
 }
 
 type waitCommand struct {
-	event string
+	event   string
+	timeout uint
 }
 
 type attrCommand struct {
