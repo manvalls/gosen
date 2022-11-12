@@ -1,7 +1,7 @@
 package gosen
 
 type commandSender interface {
-	sendCommand(elementId uint, command interface{})
+	sendCommand(command interface{})
 }
 
 type transactionCommand struct {
@@ -18,19 +18,22 @@ type scopeCommand struct {
 }
 
 type selectorCommand struct {
+	parentID uint
 	id       uint
 	selector string
 	args     []interface{}
 }
 
 type selectorAllCommand struct {
+	parentID uint
 	id       uint
 	selector string
 	args     []interface{}
 }
 
 type contentCommand struct {
-	id uint
+	parentID uint
+	id       uint
 }
 
 type fragmentCommand struct {
@@ -39,73 +42,92 @@ type fragmentCommand struct {
 }
 
 type cloneCommand struct {
-	id uint
+	targetID uint
+	id       uint
 }
 
 type textCommand struct {
-	text string
+	targetID uint
+	text     string
 }
 
 type htmlCommand struct {
-	html Template
+	targetID uint
+	html     Template
 }
 
 type waitCommand struct {
-	event   string
-	timeout uint
+	targetID uint
+	event    string
+	timeout  uint
 }
 
 type attrCommand struct {
-	name  string
-	value string
+	targetID uint
+	name     string
+	value    string
 }
 
 type rmAttrCommand struct {
-	name string
+	targetID uint
+	name     string
 }
 
 type addToAttrCommand struct {
-	name  string
-	value string
+	targetID uint
+	name     string
+	value    string
 }
 
 type rmFromAttrCommand struct {
-	name  string
-	value string
+	targetID uint
+	name     string
+	value    string
 }
 
 type addClassCommand struct {
-	class string
+	targetID uint
+	class    string
 }
 
 type rmClassCommand struct {
-	class string
+	targetID uint
+	class    string
 }
 
-type removeCommand struct{}
+type removeCommand struct {
+	targetID uint
+}
 
-type emptyCommand struct{}
+type emptyCommand struct {
+	targetID uint
+}
 
 type replaceWithCommand struct {
-	elementId uint
+	targetID  uint
+	elementID uint
 }
 
 type insertBeforeCommand struct {
-	childId uint
-	refId   uint
+	parentID uint
+	childID  uint
+	refID    uint
 }
 
 type insertAfterCommand struct {
-	childId uint
-	refId   uint
+	parentID uint
+	childID  uint
+	refID    uint
 }
 
 type appendCommand struct {
-	childId uint
+	parentID uint
+	childID  uint
 }
 
 type prependCommand struct {
-	childId uint
+	parentID uint
+	childID  uint
 }
 
 type runCommand struct {

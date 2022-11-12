@@ -7,7 +7,7 @@ type transactionBuffer struct {
 	mux      sync.Mutex
 }
 
-func (b *transactionBuffer) sendCommand(id uint, command interface{}) {
+func (b *transactionBuffer) sendCommand(command interface{}) {
 	b.mux.Lock()
 	defer b.mux.Unlock()
 
@@ -25,17 +25,14 @@ type Transaction struct {
 }
 
 func (e Node) Tx() Transaction {
-	nextId := *e.nextId
-	*e.nextId++
-
 	b := &transactionBuffer{
 		commands: make([]interface{}, 0),
 		mux:      sync.Mutex{},
 	}
 
-	return Transaction{Node{nextId, e.nextId, e.mux, b}, b}
+	return Transaction{Node{e.id, e.nextId, e.mux, b}, b}
 }
 
 func (t Transaction) Commit() {
-	t.sender.sendCommand(t.id, transactionCommand{t.buffer.commands})
+	t.sender.sendCommand(transactionCommand{t.buffer.commands})
 }

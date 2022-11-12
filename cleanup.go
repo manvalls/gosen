@@ -7,7 +7,7 @@ type cleanupBuffer struct {
 	mux      sync.Mutex
 }
 
-func (b *cleanupBuffer) sendCommand(id uint, command interface{}) {
+func (b *cleanupBuffer) sendCommand(command interface{}) {
 	b.mux.Lock()
 	defer b.mux.Unlock()
 
@@ -27,17 +27,14 @@ type Cleanup struct {
 }
 
 func (e Node) Cleanup() Cleanup {
-	nextId := *e.nextId
-	*e.nextId++
-
 	b := &cleanupBuffer{
 		commands: make([]interface{}, 0),
 		mux:      sync.Mutex{},
 	}
 
-	return Cleanup{Node{nextId, e.nextId, e.mux, b}, b}
+	return Cleanup{Node{e.id, e.nextId, e.mux, b}, b}
 }
 
 func (t Cleanup) Commit() {
-	t.sender.sendCommand(t.id, cleanupCommand{t.buffer.commands})
+	t.sender.sendCommand(cleanupCommand{t.buffer.commands})
 }
