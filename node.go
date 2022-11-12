@@ -134,6 +134,10 @@ func (e Node) Prepend(child Node) Node {
 
 // Misc
 
+func (e Node) Ref(ref Node) Node {
+	return Node{ref.id, e.nextId, e.mux, e.sender}
+}
+
 func (e Node) Wait(event string, timeout uint) Node {
 	e.sender.sendCommand(waitCommand{e.id, event, timeout})
 	return e
