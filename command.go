@@ -8,6 +8,10 @@ type transactionCommand struct {
 	commands []interface{}
 }
 
+type asyncCommand struct {
+	commands []interface{}
+}
+
 type rootSelectorCommand struct {
 	id       uint
 	selector string
@@ -137,14 +141,6 @@ type runCommand struct {
 	url string
 }
 
-type asyncCommand struct {
-	url string
-}
-
 type onceCommand struct {
-	url string
-}
-
-type onceAsyncCommand struct {
 	url string
 }

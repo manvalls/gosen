@@ -17,21 +17,11 @@ func (p *Page) Run(url string) *Page {
 	return p
 }
 
-func (p *Page) RunAsync(url string) *Page {
-	p.sender.sendCommand(asyncCommand{url})
-	return p
-}
-
 func (p *Page) RunOnce(url string) *Page {
 	p.sender.sendCommand(onceCommand{url})
 	return p
 }
 
-func (p *Page) RunOnceAsync(url string) *Page {
-	p.sender.sendCommand(onceAsyncCommand{url})
-	return p
-}
-
 func (p *Page) Tx() *Transaction {
-	return &Transaction{p, nil, sync.Mutex{}, 0}
+	return &Transaction{p.sender, nil, sync.Mutex{}, 0}
 }

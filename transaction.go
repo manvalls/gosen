@@ -3,7 +3,7 @@ package gosen
 import "sync"
 
 type Transaction struct {
-	page     *Page
+	sender   commandSender
 	commands []interface{}
 	mux      sync.Mutex
 	nextId   uint
@@ -29,7 +29,7 @@ func (t *Transaction) Commit() {
 
 	commands := t.commands
 	t.commands = nil
-	t.page.sender.sendCommand(transactionCommand{commands})
+	t.sender.sendCommand(transactionCommand{commands})
 }
 
 // Selectors
