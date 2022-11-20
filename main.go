@@ -5,12 +5,6 @@ import "net/http"
 type App struct {
 }
 
-type Page struct {
-	Node
-	Header     http.Header
-	StatusCode int
-}
-
 type handler struct {
 }
 
@@ -21,7 +15,7 @@ func NewApp() *App {
 	return &App{}
 }
 
-func (app *App) Handler(func(p Page, r *http.Request)) http.Handler {
+func (app *App) Handler(func(p *Page, r *http.Request)) http.Handler {
 	// TODO
 	h := &handler{}
 	return h

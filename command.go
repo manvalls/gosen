@@ -8,13 +8,16 @@ type transactionCommand struct {
 	commands []interface{}
 }
 
-type cleanupCommand struct {
-	commands []interface{}
+type rootSelectorCommand struct {
+	id       uint
+	selector string
+	args     []interface{}
 }
 
-type scopeCommand struct {
-	commands []interface{}
-	id       string
+type rootSelectorAllCommand struct {
+	id       uint
+	selector string
+	args     []interface{}
 }
 
 type selectorCommand struct {
@@ -134,18 +137,14 @@ type runCommand struct {
 	url string
 }
 
-type listenCommand struct {
-	url string
-}
-
 type asyncCommand struct {
 	url string
 }
 
-type deferCommand struct {
+type onceCommand struct {
 	url string
 }
 
-type onceCommand struct {
+type onceAsyncCommand struct {
 	url string
 }

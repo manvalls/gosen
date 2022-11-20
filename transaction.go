@@ -2,37 +2,54 @@ package gosen
 
 import "sync"
 
-type transactionBuffer struct {
+type Transaction struct {
+	page     *Page
 	commands []interface{}
 	mux      sync.Mutex
+	nextId   uint
 }
 
-func (b *transactionBuffer) sendCommand(command interface{}) {
-	b.mux.Lock()
-	defer b.mux.Unlock()
-
-	switch c := command.(type) {
-	case transactionCommand:
-		b.commands = append(b.commands, c.commands...)
-	default:
-		b.commands = append(b.commands, command)
-	}
+func (t *Transaction) getNextId() uint {
+	t.mux.Lock()
+	defer t.mux.Unlock()
+	nextId := t.nextId
+	t.nextId++
+	return nextId
 }
 
-type Transaction struct {
-	Node
-	buffer *transactionBuffer
+func (t *Transaction) addCommand(command interface{}) {
+	t.mux.Lock()
+	defer t.mux.Unlock()
+	t.commands = append(t.commands, command)
 }
 
-func (e Node) Tx() Transaction {
-	b := &transactionBuffer{
-		commands: make([]interface{}, 0),
-		mux:      sync.Mutex{},
-	}
+func (t *Transaction) Commit() {
+	t.mux.Lock()
+	defer t.mux.Unlock()
 
-	return Transaction{Node{e.id, e.nextId, e.mux, b}, b}
+	commands := t.commands
+	t.commands = nil
+	t.page.sender.sendCommand(transactionCommand{commands})
 }
 
-func (t Transaction) Commit() {
-	t.sender.sendCommand(transactionCommand{t.buffer.commands})
+// Selectors
+
+func (t *Transaction) S(selector string, args ...interface{}) Node {
+	nextId := t.getNextId()
+	t.addCommand(rootSelectorCommand{nextId, selector, args})
+	return Node{t, nextId}
+}
+
+func (t *Transaction) All(selector string, args ...interface{}) Node {
+	nextId := t.getNextId()
+	t.addCommand(rootSelectorAllCommand{nextId, selector, args})
+	return Node{t, nextId}
+}
+
+// Creation
+
+func (t *Transaction) Fragment(template Template) Node {
+	nextId := t.getNextId()
+	t.addCommand(fragmentCommand{nextId, template})
+	return Node{t, nextId}
 }
