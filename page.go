@@ -12,16 +12,24 @@ type Page struct {
 	sender commandSender
 }
 
-func (p *Page) Run(url string) *Page {
+func (p *Page) Run(url string) Scope {
 	p.sender.sendCommand(runCommand{url})
 	return p
 }
 
-func (p *Page) RunOnce(url string) *Page {
+func (p *Page) RunOnce(url string) Scope {
 	p.sender.sendCommand(onceCommand{url})
 	return p
 }
 
 func (p *Page) Tx() *Transaction {
 	return &Transaction{p.sender, nil, sync.Mutex{}, 0}
+}
+
+func (p *Page) Scope() Scope {
+	return &scope{p.sender, nil, sync.Mutex{}}
+}
+
+func (p *Page) Commit() {
+	// Do nothing
 }

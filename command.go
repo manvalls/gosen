@@ -8,7 +8,7 @@ type transactionCommand struct {
 	commands []interface{}
 }
 
-type asyncCommand struct {
+type scopeCommand struct {
 	commands []interface{}
 }
 

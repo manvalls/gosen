@@ -27,6 +27,10 @@ func (t *Transaction) Commit() {
 	t.mux.Lock()
 	defer t.mux.Unlock()
 
+	if len(t.commands) == 0 {
+		return
+	}
+
 	commands := t.commands
 	t.commands = nil
 	t.sender.sendCommand(transactionCommand{commands})
