@@ -43,7 +43,7 @@ type StartRoutineCommand struct {
 	Routine      uint `json:"routine,omitempty"`
 }
 
-func (r *Routine) Routine() Routine {
+func (r *Routine) Subroutine() Routine {
 	nextId := r.getNextId()
 	r.sender.SendCommand(StartRoutineCommand{nextId, r.id})
 	return Routine{r.sender, nextId, r.mux, r.nextId}
