@@ -3,10 +3,51 @@ package htmlsender
 import (
 	"github.com/manvalls/gosen/commands"
 	"github.com/manvalls/mutexmap"
+	"golang.org/x/net/html"
 )
 
 type HTMLSender struct {
-	mutex mutexmap.MutexMap[uint]
+	mutex    *mutexmap.MutexMap[uint]
+	document *html.Node
+}
+
+func NewHTMLSender() *HTMLSender {
+	document := &html.Node{
+		Type: html.DocumentNode,
+	}
+
+	doctype := &html.Node{
+		Type: html.DoctypeNode,
+		Data: "html",
+	}
+
+	document.AppendChild(doctype)
+
+	htmlNode := &html.Node{
+		Type: html.ElementNode,
+		Data: "html",
+	}
+
+	document.AppendChild(htmlNode)
+
+	head := &html.Node{
+		Type: html.ElementNode,
+		Data: "head",
+	}
+
+	htmlNode.AppendChild(head)
+
+	body := &html.Node{
+		Type: html.ElementNode,
+		Data: "body",
+	}
+
+	htmlNode.AppendChild(body)
+
+	return &HTMLSender{
+		mutex:    mutexmap.NewMutexMap[uint](),
+		document: document,
+	}
 }
 
 func (s *HTMLSender) run(c commands.RunCommand) {
@@ -14,10 +55,6 @@ func (s *HTMLSender) run(c commands.RunCommand) {
 }
 
 func (s *HTMLSender) runOnce(c commands.RunOnceCommand) {
-	// TODO
-}
-
-func (s *HTMLSender) transaction(c commands.TransactionCommand) {
 	// TODO
 }
 
