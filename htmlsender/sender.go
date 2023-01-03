@@ -2,16 +2,18 @@ package htmlsender
 
 import (
 	"github.com/manvalls/gosen/commands"
+	"github.com/manvalls/gosen/selectorcache"
 	"github.com/manvalls/mutexmap"
 	"golang.org/x/net/html"
 )
 
 type HTMLSender struct {
-	mutex    *mutexmap.MutexMap[uint]
-	document *html.Node
+	mutex         *mutexmap.MutexMap[uint]
+	document      *html.Node
+	selectorCache *selectorcache.SelectorCache
 }
 
-func NewHTMLSender() *HTMLSender {
+func NewHTMLSender(cache *selectorcache.SelectorCache) *HTMLSender {
 	document := &html.Node{
 		Type: html.DocumentNode,
 	}
@@ -45,8 +47,9 @@ func NewHTMLSender() *HTMLSender {
 	htmlNode.AppendChild(body)
 
 	return &HTMLSender{
-		mutex:    mutexmap.NewMutexMap[uint](),
-		document: document,
+		mutex:         mutexmap.NewMutexMap[uint](),
+		document:      document,
+		selectorCache: cache,
 	}
 }
 
