@@ -237,27 +237,11 @@ func (s *HTMLSender) transaction(c commands.TransactionCommand) {
 				}
 			}
 
-		case commands.AddToAttrSubCommand:
-			// TODO
-		case commands.RmFromAttrSubCommand:
-			// TODO
-		case commands.AddClassSubCommand:
-			// TODO
-		case commands.RmClassSubCommand:
-			// TODO
 		case commands.RemoveSubCommand:
-			// TODO
-		case commands.EmptySubCommand:
-			// TODO
-		case commands.ReplaceWithSubCommand:
 			// TODO
 		case commands.InsertBeforeSubCommand:
 			// TODO
-		case commands.InsertAfterSubCommand:
-			// TODO
 		case commands.AppendSubCommand:
-			// TODO
-		case commands.PrependSubCommand:
 			// TODO
 		}
 

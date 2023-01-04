@@ -90,48 +90,6 @@ func (n Node) RmAttr(name string) Node {
 	return n
 }
 
-type AddToAttrSubCommand struct {
-	Target    uint   `json:"target"`
-	AddToAttr string `json:"addToAttr"`
-	Value     string `json:"value"`
-}
-
-func (n Node) AddToAttr(name string, value string) Node {
-	n.tx.SendCommand(AddToAttrSubCommand{n.id, name, value})
-	return n
-}
-
-type RmFromAttrSubCommand struct {
-	Target     uint   `json:"target"`
-	RmFromAttr string `json:"rmFromAttr"`
-	Value      string `json:"value"`
-}
-
-func (n Node) RmFromAttr(name string, value string) Node {
-	n.tx.SendCommand(RmFromAttrSubCommand{n.id, name, value})
-	return n
-}
-
-type AddClassSubCommand struct {
-	Target   uint   `json:"target"`
-	AddClass string `json:"addClass"`
-}
-
-func (n Node) AddClass(name string) Node {
-	n.tx.SendCommand(AddClassSubCommand{n.id, name})
-	return n
-}
-
-type RmClassSubCommand struct {
-	Target  uint   `json:"target"`
-	RmClass string `json:"rmClass"`
-}
-
-func (n Node) RmClass(name string) Node {
-	n.tx.SendCommand(RmClassSubCommand{n.id, name})
-	return n
-}
-
 // Node manipulation
 
 type RemoveSubCommand struct {
@@ -140,32 +98,6 @@ type RemoveSubCommand struct {
 
 func (n Node) Remove() {
 	n.tx.SendCommand(RemoveSubCommand{n.id})
-}
-
-type EmptySubCommand struct {
-	Empty uint `json:"empty"`
-}
-
-func (n Node) Empty() Node {
-	n.tx.SendCommand(EmptySubCommand{n.id})
-	return n
-}
-
-type ReplaceWithSubCommand struct {
-	Target      uint `json:"target"`
-	ReplaceWith uint `json:"replaceWith"`
-}
-
-func (n Node) ReplaceWith(other Node) Node {
-	if n.id == other.id {
-		return n
-	}
-
-	if n.tx == other.tx {
-		n.tx.SendCommand(ReplaceWithSubCommand{n.id, other.id})
-	}
-
-	return n
 }
 
 type InsertBeforeSubCommand struct {
@@ -183,21 +115,6 @@ func (n Node) InsertBefore(child Node, ref Node) Node {
 	return n
 }
 
-type InsertAfterSubCommand struct {
-	Parent      uint `json:"parent"`
-	Ref         uint `json:"ref"`
-	InsertAfter uint `json:"insertAfter"`
-}
-
-func (n Node) InsertAfter(child Node, ref Node) Node {
-	if n.tx != child.tx || n.tx != ref.tx {
-		panic("Nodes must belong to the same transaction")
-	}
-
-	n.tx.SendCommand(InsertAfterSubCommand{n.id, ref.id, child.id})
-	return n
-}
-
 type AppendSubCommand struct {
 	Parent uint `json:"parent"`
 	Append uint `json:"append"`
@@ -209,20 +126,6 @@ func (n Node) Append(child Node) Node {
 	}
 
 	n.tx.SendCommand(AppendSubCommand{n.id, child.id})
-	return n
-}
-
-type PrependSubCommand struct {
-	Parent  uint `json:"parent"`
-	Prepend uint `json:"prepend"`
-}
-
-func (n Node) Prepend(child Node) Node {
-	if n.tx != child.tx {
-		panic("Nodes must belong to the same transaction")
-	}
-
-	n.tx.SendCommand(PrependSubCommand{n.id, child.id})
 	return n
 }
 
