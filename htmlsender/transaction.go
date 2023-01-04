@@ -238,11 +238,21 @@ func (s *HTMLSender) transaction(c commands.TransactionCommand) {
 			}
 
 		case commands.RemoveSubCommand:
-			// TODO
+			parent := nodes[cmd.Remove]
+			if parent == nil || parent.isFragment {
+				continue
+			}
+			
+			for _, node := range parent.nodes {
+				node.Parent.RemoveChild(node)
+			}
+
 		case commands.InsertBeforeSubCommand:
 			// TODO
+
 		case commands.AppendSubCommand:
 			// TODO
+
 		}
 
 	}
