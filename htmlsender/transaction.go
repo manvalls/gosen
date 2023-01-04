@@ -299,7 +299,39 @@ func (s *HTMLSender) transaction(c commands.TransactionCommand) {
 			}
 
 		case commands.AppendSubCommand:
-			// TODO
+			parent := nodes[cmd.Parent]
+			newChild := nodes[cmd.Append]
+
+			if parent == nil || newChild == nil {
+				continue
+			}
+
+			for _, node := range newChild.nodes {
+				if node.Parent != nil {
+					node.Parent.RemoveChild(node)
+				}
+			}
+
+			if parent.isFragment {
+				parent.nodes = append(parent.nodes, newChild.nodes...)
+				if newChild.isFragment {
+					newChild.nodes = nil
+				}
+				continue
+			}
+
+			clone := false
+			for _, node := range parent.nodes {
+				for _, new := range newChild.nodes {
+					if clone {
+						new = util.CloneNode(new)
+					}
+
+					node.AppendChild(new)
+				}
+
+				clone = true
+			}
 
 		}
 
