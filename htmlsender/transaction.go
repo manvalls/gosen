@@ -202,7 +202,26 @@ func (s *HTMLSender) transaction(c commands.TransactionCommand) {
 			}
 
 		case commands.AttrSubCommand:
-			// TODO
+			parent := nodes[cmd.Target]
+			if parent == nil || parent.isFragment {
+				continue
+			}
+
+		loop:
+			for _, node := range parent.nodes {
+				for i, attr := range node.Attr {
+					if attr.Key == cmd.Attr {
+						node.Attr[i].Val = cmd.Value
+						continue loop
+					}
+				}
+
+				node.Attr = append(node.Attr, html.Attribute{
+					Key: cmd.Attr,
+					Val: cmd.Value,
+				})
+			}
+
 		case commands.RmAttrSubCommand:
 			// TODO
 		case commands.AddToAttrSubCommand:
