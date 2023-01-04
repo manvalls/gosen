@@ -142,10 +142,9 @@ func (s *HTMLSender) transaction(c commands.TransactionCommand) {
 				continue
 			}
 
-			cache := make(map[*html.Node]*html.Node)
 			result := make([]*html.Node, len(parent.nodes))
 			for i, node := range parent.nodes {
-				result[i] = util.CloneNode(node, cache)
+				result[i] = util.CloneNode(node)
 			}
 
 			nodes[cmd.Clone] = &SelectedNodes{
@@ -289,7 +288,7 @@ func (s *HTMLSender) transaction(c commands.TransactionCommand) {
 						}
 
 						if clone {
-							new = util.CloneNode(new, make(map[*html.Node]*html.Node))
+							new = util.CloneNode(new)
 						}
 
 						node.InsertBefore(new, refNode)

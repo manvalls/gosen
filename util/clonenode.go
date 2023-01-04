@@ -1,8 +1,16 @@
 package util
 
-import "golang.org/x/net/html"
+import (
+	"golang.org/x/net/html"
+)
 
-func CloneNode(node *html.Node, cache map[*html.Node]*html.Node) *html.Node {
+func CloneNode(node *html.Node) *html.Node {
+	cache := map[*html.Node]*html.Node{}
+	cache[node.Parent] = nil
+	return cloneNode(node, cache)
+}
+
+func cloneNode(node *html.Node, cache map[*html.Node]*html.Node) *html.Node {
 	if node == nil {
 		return nil
 	}
@@ -14,11 +22,11 @@ func CloneNode(node *html.Node, cache map[*html.Node]*html.Node) *html.Node {
 	newNode := &html.Node{}
 	cache[node] = newNode
 
-	newNode.Parent = CloneNode(node.Parent, cache)
-	newNode.FirstChild = CloneNode(node.FirstChild, cache)
-	newNode.LastChild = CloneNode(node.LastChild, cache)
-	newNode.PrevSibling = CloneNode(node.PrevSibling, cache)
-	newNode.NextSibling = CloneNode(node.NextSibling, cache)
+	newNode.Parent = cloneNode(node.Parent, cache)
+	newNode.FirstChild = cloneNode(node.FirstChild, cache)
+	newNode.LastChild = cloneNode(node.LastChild, cache)
+	newNode.PrevSibling = cloneNode(node.PrevSibling, cache)
+	newNode.NextSibling = cloneNode(node.NextSibling, cache)
 
 	newNode.Type = node.Type
 	newNode.DataAtom = node.DataAtom
