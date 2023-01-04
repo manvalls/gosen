@@ -108,7 +108,32 @@ func (s *HTMLSender) transaction(c commands.TransactionCommand) {
 			}
 
 		case commands.ContentSubCommand:
-			// TODO
+			parent := nodes[cmd.Id]
+			if parent == nil {
+				continue
+			}
+
+			if parent.isFragment {
+				nodes[cmd.Id] = &SelectedNodes{
+					isFragment: true,
+					nodes:      parent.nodes,
+				}
+
+				continue
+			}
+
+			content := []*html.Node{}
+			for _, node := range parent.nodes {
+				for c := node.FirstChild; c != nil; c = c.NextSibling {
+					content = append(content, c)
+				}
+			}
+
+			nodes[cmd.Id] = &SelectedNodes{
+				isFragment: true,
+				nodes:      content,
+			}
+
 		case commands.CloneSubCommand:
 			// TODO
 		case commands.TextSubCommand:
