@@ -114,7 +114,7 @@ func (s *HTMLSender) transaction(c commands.TransactionCommand) {
 			}
 
 			if parent.isFragment {
-				nodes[cmd.Id] = &SelectedNodes{
+				nodes[cmd.Content] = &SelectedNodes{
 					isFragment: true,
 					nodes:      parent.nodes,
 				}
@@ -129,15 +129,55 @@ func (s *HTMLSender) transaction(c commands.TransactionCommand) {
 				}
 			}
 
-			nodes[cmd.Id] = &SelectedNodes{
+			nodes[cmd.Content] = &SelectedNodes{
 				isFragment: true,
 				nodes:      content,
 			}
 
 		case commands.CloneSubCommand:
-			// TODO
+			parent := nodes[cmd.Id]
+			if parent == nil {
+				continue
+			}
+
+			cache := make(map[*html.Node]*html.Node)
+			result := make([]*html.Node, len(parent.nodes))
+			for i, node := range parent.nodes {
+				result[i] = cloneNode(node, cache)
+			}
+
+			nodes[cmd.Clone] = &SelectedNodes{
+				isFragment: parent.isFragment,
+				nodes:      result,
+			}
+
 		case commands.TextSubCommand:
-			// TODO
+			parent := nodes[cmd.Target]
+			if parent == nil {
+				continue
+			}
+
+			if parent.isFragment {
+				parent.nodes = []*html.Node{
+					{
+						Type: html.TextNode,
+						Data: cmd.Text,
+					},
+				}
+				continue
+			}
+
+			for _, node := range parent.nodes {
+				for c := node.FirstChild; c != nil; c = c.NextSibling {
+					node.RemoveChild(c)
+				}
+
+				node.AppendChild(&html.Node{
+					Type: html.TextNode,
+					Data: cmd.Text,
+				})
+			}
+
 		case commands.HtmlSubCommand:
 			// TODO
 		case commands.AttrSubCommand:
