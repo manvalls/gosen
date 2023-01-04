@@ -223,7 +223,20 @@ func (s *HTMLSender) transaction(c commands.TransactionCommand) {
 			}
 
 		case commands.RmAttrSubCommand:
-			// TODO
+			parent := nodes[cmd.Target]
+			if parent == nil || parent.isFragment {
+				continue
+			}
+
+			for _, node := range parent.nodes {
+				for i, attr := range node.Attr {
+					if attr.Key == cmd.RmAttr {
+						node.Attr = append(node.Attr[:i], node.Attr[i+1:]...)
+						break
+					}
+				}
+			}
+
 		case commands.AddToAttrSubCommand:
 			// TODO
 		case commands.RmFromAttrSubCommand:
