@@ -3,6 +3,7 @@ package htmlsender
 import (
 	"github.com/andybalholm/cascadia"
 	"github.com/manvalls/gosen/commands"
+	"github.com/manvalls/gosen/util"
 	"golang.org/x/net/html"
 )
 
@@ -143,7 +144,7 @@ func (s *HTMLSender) transaction(c commands.TransactionCommand) {
 			cache := make(map[*html.Node]*html.Node)
 			result := make([]*html.Node, len(parent.nodes))
 			for i, node := range parent.nodes {
-				result[i] = cloneNode(node, cache)
+				result[i] = util.CloneNode(node, cache)
 			}
 
 			nodes[cmd.Clone] = &SelectedNodes{
