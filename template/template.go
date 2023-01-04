@@ -1,8 +1,8 @@
 package template
 
-type Template struct {
-}
+import "golang.org/x/net/html"
 
-func (t *Template) MarshalText() (text []byte, err error) {
-	return []byte{}, nil
+type Template interface {
+	GetFragment(context *html.Node) []*html.Node
+	MarshalText() (text []byte, err error)
 }

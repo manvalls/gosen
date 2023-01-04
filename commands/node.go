@@ -58,11 +58,11 @@ func (n Node) Text(text string) Node {
 }
 
 type HtmlSubCommand struct {
-	Target uint               `json:"target"`
-	Html   *template.Template `json:"html"`
+	Target uint              `json:"target"`
+	Html   template.Template `json:"html"`
 }
 
-func (n Node) Html(html *template.Template) Node {
+func (n Node) Html(html template.Template) Node {
 	n.tx.SendCommand(HtmlSubCommand{n.id, html})
 	return n
 }

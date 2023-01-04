@@ -101,7 +101,12 @@ func (s *HTMLSender) transaction(c commands.TransactionCommand) {
 			nodes[cmd.Id] = queryAll(parent, sel)
 
 		case commands.FragmentSubCommand:
-			// TODO
+
+			nodes[cmd.Id] = &SelectedNodes{
+				isFragment: true,
+				nodes:      cmd.Fragment.GetFragment(nil),
+			}
+
 		case commands.ContentSubCommand:
 			// TODO
 		case commands.CloneSubCommand:

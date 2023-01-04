@@ -77,11 +77,11 @@ func (t *Transaction) All(selector string, args ...interface{}) Node {
 // Creation
 
 type FragmentSubCommand struct {
-	Id       uint               `json:"id"`
-	Fragment *template.Template `json:"fragment"`
+	Id       uint              `json:"id"`
+	Fragment template.Template `json:"fragment"`
 }
 
-func (t *Transaction) Fragment(fragment *template.Template) Node {
+func (t *Transaction) Fragment(fragment template.Template) Node {
 	nextId := t.getNextId()
 	t.SendCommand(FragmentSubCommand{nextId, fragment})
 	return Node{t, nextId}
