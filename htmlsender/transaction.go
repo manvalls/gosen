@@ -73,6 +73,7 @@ func (s *HTMLSender) transaction(c commands.TransactionCommand) {
 	for _, command := range c.Transaction {
 
 		switch cmd := command.(type) {
+
 		case commands.SelectorSubCommand:
 
 			parent := nodes[cmd.Parent]
@@ -180,7 +181,26 @@ func (s *HTMLSender) transaction(c commands.TransactionCommand) {
 			}
 
 		case commands.HtmlSubCommand:
-			// TODO
+			parent := nodes[cmd.Target]
+			if parent == nil {
+				continue
+			}
+
+			if parent.isFragment {
+				parent.nodes = cmd.Html.GetFragment(nil)
+				continue
+			}
+
+			for _, node := range parent.nodes {
+				for c := node.FirstChild; c != nil; c = c.NextSibling {
+					node.RemoveChild(c)
+				}
+
+				for _, child := range cmd.Html.GetFragment(node) {
+					node.AppendChild(child)
+				}
+			}
+
 		case commands.AttrSubCommand:
 			// TODO
 		case commands.RmAttrSubCommand:
