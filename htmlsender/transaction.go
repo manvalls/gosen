@@ -242,13 +242,62 @@ func (s *HTMLSender) transaction(c commands.TransactionCommand) {
 			if parent == nil || parent.isFragment {
 				continue
 			}
-			
+
 			for _, node := range parent.nodes {
 				node.Parent.RemoveChild(node)
 			}
 
 		case commands.InsertBeforeSubCommand:
-			// TODO
+			parent := nodes[cmd.Parent]
+			ref := nodes[cmd.Ref]
+			newChild := nodes[cmd.InsertBefore]
+
+			if parent == nil || newChild == nil {
+				continue
+			}
+
+			if parent.isFragment {
+			top:
+				for _, node := range parent.nodes {
+					for i, refNode := range ref.nodes {
+						if refNode == node {
+							for _, new := range newChild.nodes {
+								if new.Parent != nil {
+									new.Parent.RemoveChild(new)
+								}
+							}
+
+							parent.nodes = append(parent.nodes[:i], append(newChild.nodes, parent.nodes[i:]...)...)
+							break top
+						}
+					}
+				}
+
+				continue
+			}
+
+			clone := false
+			for _, node := range parent.nodes {
+				for _, refNode := range ref.nodes {
+					if refNode.Parent != node {
+						continue
+					}
+
+					for _, new := range newChild.nodes {
+						if new.Parent != nil {
+							new.Parent.RemoveChild(new)
+						}
+
+						if clone {
+							new = util.CloneNode(new, make(map[*html.Node]*html.Node))
+						}
+
+						node.InsertBefore(new, refNode)
+					}
+
+					clone = true
+				}
+			}
 
 		case commands.AppendSubCommand:
 			// TODO
