@@ -41,6 +41,10 @@ func RawFile(fs fs.FS, name string) Template {
 	return template.RawFile(fs, name)
 }
 
+func String(s string) Template {
+	return template.String(s)
+}
+
 func Read(r ReadCloserFactory) Template {
 	return template.Read(r)
 }
