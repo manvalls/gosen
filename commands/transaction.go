@@ -22,9 +22,8 @@ type TransactionCommand struct {
 func (t *Transaction) getNextId() uint {
 	t.mux.Lock()
 	defer t.mux.Unlock()
-	nextId := t.nextId
 	t.nextId++
-	return nextId
+	return t.nextId
 }
 
 func (t *Transaction) SendCommand(command any) {
