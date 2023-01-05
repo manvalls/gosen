@@ -5,6 +5,7 @@ import (
 	"github.com/manvalls/gosen/selectorcache"
 	"github.com/manvalls/mutexmap"
 	"golang.org/x/net/html"
+	"golang.org/x/net/html/atom"
 )
 
 type HTMLSender struct {
@@ -26,22 +27,25 @@ func NewHTMLSender(cache *selectorcache.SelectorCache) *HTMLSender {
 	document.AppendChild(doctype)
 
 	htmlNode := &html.Node{
-		Type: html.ElementNode,
-		Data: "html",
+		Type:     html.ElementNode,
+		DataAtom: atom.Html,
+		Data:     "html",
 	}
 
 	document.AppendChild(htmlNode)
 
 	head := &html.Node{
-		Type: html.ElementNode,
-		Data: "head",
+		Type:     html.ElementNode,
+		DataAtom: atom.Head,
+		Data:     "head",
 	}
 
 	htmlNode.AppendChild(head)
 
 	body := &html.Node{
-		Type: html.ElementNode,
-		Data: "body",
+		Type:     html.ElementNode,
+		DataAtom: atom.Body,
+		Data:     "body",
 	}
 
 	htmlNode.AppendChild(body)
