@@ -1,6 +1,8 @@
 package htmlsender
 
 import (
+	"io"
+
 	"github.com/manvalls/gosen/commands"
 	"github.com/manvalls/gosen/selectorcache"
 	"github.com/manvalls/mutexmap"
@@ -90,4 +92,8 @@ func (s *HTMLSender) SendCommand(command any) {
 		s.transaction(c)
 
 	}
+}
+
+func (s *HTMLSender) Render(w io.Writer) error {
+	return html.Render(w, s.document)
 }

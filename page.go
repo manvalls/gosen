@@ -7,5 +7,5 @@ import (
 type Page struct {
 	Header     http.Header
 	StatusCode int
-	Routine
+	*Routine
 }
