@@ -43,6 +43,6 @@ func (t *cachedTemplate) MarshalText() (text []byte, err error) {
 
 func Cache(template Template) Template {
 	return &cachedTemplate{
-		template: template,
+		template: WithFallback(template),
 	}
 }

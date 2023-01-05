@@ -20,7 +20,7 @@ func (t *deferredTemplate) getTemplate() Template {
 	t.mux.Lock()
 	defer t.mux.Unlock()
 	if t.template == nil {
-		t.template = t.builder.Template()
+		t.template = WithFallback(t.builder.Template())
 	}
 	return t.template
 }

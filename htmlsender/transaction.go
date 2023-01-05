@@ -5,6 +5,7 @@ package htmlsender
 import (
 	"github.com/andybalholm/cascadia"
 	"github.com/manvalls/gosen/commands"
+	"github.com/manvalls/gosen/template"
 	"github.com/manvalls/gosen/util"
 	"golang.org/x/net/html"
 )
@@ -108,7 +109,7 @@ func (s *HTMLSender) transaction(c commands.TransactionCommand) {
 
 			nodes[cmd.Id] = &SelectedNodes{
 				isFragment: true,
-				nodes:      cmd.Fragment.GetFragment(nil),
+				nodes:      template.WithFallback(cmd.Fragment).GetFragment(nil),
 			}
 
 		case commands.ContentSubCommand:
@@ -188,7 +189,7 @@ func (s *HTMLSender) transaction(c commands.TransactionCommand) {
 			}
 
 			if parent.isFragment {
-				parent.nodes = cmd.Html.GetFragment(nil)
+				parent.nodes = template.WithFallback(cmd.Html).GetFragment(nil)
 				continue
 			}
 
@@ -197,7 +198,7 @@ func (s *HTMLSender) transaction(c commands.TransactionCommand) {
 					node.RemoveChild(c)
 				}
 
-				for _, child := range cmd.Html.GetFragment(node) {
+				for _, child := range template.WithFallback(cmd.Html).GetFragment(node) {
 					node.AppendChild(child)
 				}
 			}
