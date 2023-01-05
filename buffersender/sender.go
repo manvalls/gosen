@@ -7,7 +7,7 @@ type BufferSender struct {
 	commands []any
 }
 
-func New() *BufferSender {
+func NewBufferSender() *BufferSender {
 	return &BufferSender{}
 }
 

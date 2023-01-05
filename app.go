@@ -7,6 +7,7 @@ import (
 )
 
 type App struct {
+	Hydrate       bool
 	selectorCache *selectorcache.SelectorCache
 }
 
@@ -21,6 +22,7 @@ func (h *handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 func NewApp() *App {
 	return &App{
+		Hydrate:       true,
 		selectorCache: selectorcache.New(),
 	}
 }
