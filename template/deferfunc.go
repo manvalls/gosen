@@ -1,13 +1,13 @@
 package template
 
-type deferFuncTemplateBuilder struct {
+type deferFuncTemplateFactory struct {
 	f func() Template
 }
 
-func (t *deferFuncTemplateBuilder) Template() Template {
+func (t *deferFuncTemplateFactory) Template() Template {
 	return t.f()
 }
 
 func DeferFunc(f func() Template) Template {
-	return Defer(&deferFuncTemplateBuilder{f})
+	return Defer(&deferFuncTemplateFactory{f})
 }

@@ -6,12 +6,12 @@ import (
 	"golang.org/x/net/html"
 )
 
-type TemplateBuilder interface {
+type TemplateFactory interface {
 	Template() Template
 }
 
 type deferredTemplate struct {
-	builder  TemplateBuilder
+	builder  TemplateFactory
 	mux      sync.Mutex
 	template Template
 }
@@ -33,6 +33,6 @@ func (t *deferredTemplate) MarshalText() (text []byte, err error) {
 	return t.getTemplate().MarshalText()
 }
 
-func Defer(builder TemplateBuilder) Template {
+func Defer(builder TemplateFactory) Template {
 	return &deferredTemplate{builder, sync.Mutex{}, nil}
 }
