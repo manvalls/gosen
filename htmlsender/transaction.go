@@ -1,5 +1,7 @@
 package htmlsender
 
+// WARNING: this is a little rough around the edges, revisit later
+
 import (
 	"github.com/andybalholm/cascadia"
 	"github.com/manvalls/gosen/commands"
