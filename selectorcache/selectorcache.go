@@ -2,12 +2,14 @@ package selectorcache
 
 import (
 	"fmt"
+	"sync"
 
 	"github.com/andybalholm/cascadia"
 )
 
 type SelectorCache struct {
 	cache map[string]cascadia.Sel
+	mux   sync.Mutex
 }
 
 func New() *SelectorCache {
@@ -17,6 +19,9 @@ func New() *SelectorCache {
 }
 
 func (s *SelectorCache) Get(selector string, args []interface{}) (cascadia.Sel, error) {
+	s.mux.Lock()
+	defer s.mux.Unlock()
+
 	if len(args) > 0 {
 		return cascadia.Parse(fmt.Sprintf(selector, args...))
 	}
