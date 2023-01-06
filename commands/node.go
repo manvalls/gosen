@@ -103,29 +103,47 @@ func (n Node) Remove() {
 type InsertBeforeSubCommand struct {
 	Parent       uint `json:"parent"`
 	Ref          uint `json:"ref"`
-	InsertBefore uint `json:"insertBefore"`
+	InsertBefore any  `json:"insertBefore"`
 }
 
-func (n Node) InsertBefore(child Node, ref Node) Node {
-	if n.tx != child.tx || n.tx != ref.tx {
-		panic("Nodes must belong to the same transaction")
+func (n Node) InsertBefore(child any, ref Node) Node {
+	switch c := child.(type) {
+
+	case Node:
+		if n.tx != c.tx || n.tx != ref.tx {
+			panic("Nodes must belong to the same transaction")
+		}
+
+		n.tx.SendCommand(InsertBeforeSubCommand{n.id, ref.id, c.id})
+
+	case template.Template:
+		n.tx.SendCommand(InsertBeforeSubCommand{n.id, ref.id, c})
+
 	}
 
-	n.tx.SendCommand(InsertBeforeSubCommand{n.id, ref.id, child.id})
 	return n
 }
 
 type AppendSubCommand struct {
 	Parent uint `json:"parent"`
-	Append uint `json:"append"`
+	Append any  `json:"append"`
 }
 
-func (n Node) Append(child Node) Node {
-	if n.tx != child.tx {
-		panic("Nodes must belong to the same transaction")
+func (n Node) Append(child any) Node {
+	switch c := child.(type) {
+
+	case Node:
+		if n.tx != c.tx {
+			panic("Nodes must belong to the same transaction")
+		}
+
+		n.tx.SendCommand(AppendSubCommand{n.id, c.id})
+
+	case template.Template:
+		n.tx.SendCommand(AppendSubCommand{n.id, c})
+
 	}
 
-	n.tx.SendCommand(AppendSubCommand{n.id, child.id})
 	return n
 }
 

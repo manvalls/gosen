@@ -1,6 +1,7 @@
 package htmlsender
 
-// WARNING: this is a little rough around the edges, revisit later
+// NOTE: There's a lot of duplication between node and content, fix it later.
+// This file needs splitting up into multiple files, one per command.
 
 import (
 	"github.com/andybalholm/cascadia"
@@ -10,68 +11,172 @@ import (
 	"golang.org/x/net/html"
 )
 
-type SelectedNodes struct {
-	isFragment bool
-	nodes      []*html.Node
+type fragment struct {
+	nodes []*html.Node
 }
 
-func queryFirst(parent *SelectedNodes, selector cascadia.Sel) *SelectedNodes {
-	if parent.isFragment {
-		for _, node := range parent.nodes {
-			if selector.Match(node) {
-				return &SelectedNodes{
-					isFragment: false,
-					nodes:      []*html.Node{node},
-				}
-			}
-		}
-	}
+type content struct {
+	parent *html.Node
+}
 
-	for _, node := range parent.nodes {
-		result := cascadia.Query(node, selector)
+func queryFirstFromNode(node *html.Node, selector cascadia.Sel) *html.Node {
+	return cascadia.Query(node, selector)
+}
+
+func queryFirstFromFragment(f *fragment, selector cascadia.Sel) *html.Node {
+	for _, node := range f.nodes {
+		if selector.Match(node) {
+			return node
+		}
+
+		result := queryFirstFromNode(node, selector)
 		if result != nil {
-			return &SelectedNodes{
-				isFragment: false,
-				nodes:      []*html.Node{result},
-			}
+			return result
 		}
 	}
 
-	return &SelectedNodes{
-		isFragment: false,
-		nodes:      []*html.Node{},
-	}
+	return nil
 }
 
-func queryAll(parent *SelectedNodes, selector cascadia.Sel) *SelectedNodes {
+func queryFirst(parent []any, selector cascadia.Sel) []any {
+	nodes := make([]any, 0)
+
+	for _, node := range parent {
+		switch n := node.(type) {
+
+		case *html.Node:
+			node := queryFirstFromNode(n, selector)
+			if node != nil {
+				return []any{node}
+			}
+
+		case *fragment:
+			node := queryFirstFromFragment(n, selector)
+			if node != nil {
+				return []any{node}
+			}
+
+		case content:
+			node := queryFirstFromNode(n.parent, selector)
+			if node != nil {
+				return []any{node}
+			}
+
+		}
+	}
+
+	return nodes
+}
+
+func queryAllFromNode(node *html.Node, selector cascadia.Sel) []*html.Node {
+	return cascadia.QueryAll(node, selector)
+}
+
+func queryAllFromFragment(f *fragment, selector cascadia.Sel) []*html.Node {
 	nodes := make([]*html.Node, 0)
 
-	if parent.isFragment {
-		for _, node := range parent.nodes {
-			if selector.Match(node) {
-				nodes = append(nodes, node)
-			}
+	for _, node := range f.nodes {
+		if selector.Match(node) {
+			nodes = append(nodes, node)
 		}
-	}
 
-	for _, node := range parent.nodes {
-		result := cascadia.QueryAll(node, selector)
+		result := queryAllFromNode(node, selector)
 		nodes = append(nodes, result...)
 	}
 
-	return &SelectedNodes{
-		isFragment: false,
-		nodes:      nodes,
+	return nodes
+}
+
+func queryAll(parent []any, selector cascadia.Sel) []any {
+	nodes := []*html.Node{}
+
+	for _, node := range parent {
+		switch n := node.(type) {
+
+		case *html.Node:
+			result := queryAllFromNode(n, selector)
+			nodes = append(nodes, result...)
+
+		case *fragment:
+			result := queryAllFromFragment(n, selector)
+			nodes = append(nodes, result...)
+
+		case content:
+			result := queryAllFromNode(n.parent, selector)
+			nodes = append(nodes, result...)
+
+		}
+
 	}
+
+	resultArray := make([]any, len(nodes))
+	for i, node := range nodes {
+		resultArray[i] = node
+	}
+
+	return resultArray
+}
+
+func getNodesToInsert(nodes map[uint][]any, toInsert any, context *html.Node, clone bool) []*html.Node {
+	if t, ok := toInsert.(template.Template); ok {
+		return t.GetFragment(context)
+	}
+
+	id, ok := toInsert.(uint)
+	if !ok {
+		return nil
+	}
+
+	result := []*html.Node{}
+	for _, node := range nodes[id] {
+		switch n := node.(type) {
+
+		case *html.Node:
+			if clone {
+				result = append(result, util.CloneNode(n))
+			} else {
+				if n.Parent != nil {
+					n.Parent.RemoveChild(n)
+				}
+
+				result = append(result, n)
+			}
+
+		case *fragment:
+			if clone {
+				for _, node := range n.nodes {
+					result = append(result, util.CloneNode(node))
+				}
+			} else {
+				result = append(result, n.nodes...)
+				n.nodes = nil
+			}
+
+		case content:
+			if clone {
+				for c := n.parent.FirstChild; c != nil; c = c.NextSibling {
+					result = append(result, util.CloneNode(c))
+				}
+			} else {
+				for c := n.parent.FirstChild; c != nil; c = c.NextSibling {
+					result = append(result, c)
+				}
+
+				for c := n.parent.FirstChild; c != nil; c = c.NextSibling {
+					n.parent.RemoveChild(c)
+				}
+			}
+
+		}
+	}
+
+	return result
 }
 
 func (s *HTMLSender) transaction(c commands.TransactionCommand) {
 
-	nodes := make(map[uint]*SelectedNodes)
-	nodes[0] = &SelectedNodes{
-		isFragment: false,
-		nodes:      []*html.Node{s.document},
-	}
+	nodes := make(map[uint][]any)
+	nodes[0] = []any{s.document}
 
 	for _, command := range c.Transaction {
 
@@ -79,265 +184,297 @@ func (s *HTMLSender) transaction(c commands.TransactionCommand) {
 
 		case commands.SelectorSubCommand:
 
-			parent := nodes[cmd.Parent]
-			if parent == nil {
-				continue
-			}
-
 			sel, err := s.selectorCache.Get(cmd.Selector, cmd.Args)
 			if err != nil {
 				continue
 			}
 
-			nodes[cmd.Id] = queryFirst(parent, sel)
+			nodes[cmd.Id] = queryFirst(nodes[cmd.Parent], sel)
 
 		case commands.SelectorAllSubCommand:
-
-			parent := nodes[cmd.Parent]
-			if parent == nil {
-				continue
-			}
 
 			sel, err := s.selectorCache.Get(cmd.SelectorAll, cmd.Args)
 			if err != nil {
 				continue
 			}
 
-			nodes[cmd.Id] = queryAll(parent, sel)
+			nodes[cmd.Id] = queryAll(nodes[cmd.Parent], sel)
 
 		case commands.FragmentSubCommand:
 
-			nodes[cmd.Id] = &SelectedNodes{
-				isFragment: true,
-				nodes:      template.WithFallback(cmd.Fragment).GetFragment(nil),
-			}
+			nodes[cmd.Id] = []any{&fragment{template.WithFallback(cmd.Fragment).GetFragment(nil)}}
 
 		case commands.ContentSubCommand:
-			parent := nodes[cmd.Id]
-			if parent == nil {
-				continue
-			}
+			result := []any{}
 
-			if parent.isFragment {
-				nodes[cmd.Content] = &SelectedNodes{
-					isFragment: true,
-					nodes:      parent.nodes,
-				}
+			for _, node := range nodes[cmd.Content] {
+				switch n := node.(type) {
 
-				continue
-			}
+				case *html.Node:
+					result = append(result, content{n})
 
-			content := []*html.Node{}
-			for _, node := range parent.nodes {
-				for c := node.FirstChild; c != nil; c = c.NextSibling {
-					content = append(content, c)
+				case *fragment:
+					result = append(result, n)
+
+				case content:
+					result = append(result, n)
+
 				}
 			}
 
-			nodes[cmd.Content] = &SelectedNodes{
-				isFragment: true,
-				nodes:      content,
-			}
+			nodes[cmd.Id] = result
 
 		case commands.CloneSubCommand:
-			parent := nodes[cmd.Id]
-			if parent == nil {
-				continue
+			result := []any{}
+
+			for _, node := range nodes[cmd.Clone] {
+				switch n := node.(type) {
+
+				case *html.Node:
+					result = append(result, util.CloneNode(n))
+
+				case *fragment:
+					f := &fragment{}
+					for _, node := range n.nodes {
+						f.nodes = append(f.nodes, util.CloneNode(node))
+					}
+
+					result = append(result, f)
+
+				case content:
+					f := &fragment{}
+					for c := n.parent.FirstChild; c != nil; c = c.NextSibling {
+						f.nodes = append(f.nodes, util.CloneNode(c))
+					}
+
+					result = append(result, f)
+
+				}
 			}
 
-			result := make([]*html.Node, len(parent.nodes))
-			for i, node := range parent.nodes {
-				result[i] = util.CloneNode(node)
-			}
-
-			nodes[cmd.Clone] = &SelectedNodes{
-				isFragment: parent.isFragment,
-				nodes:      result,
-			}
+			nodes[cmd.Id] = result
 
 		case commands.TextSubCommand:
-			parent := nodes[cmd.Target]
-			if parent == nil {
-				continue
-			}
 
-			if parent.isFragment {
-				parent.nodes = []*html.Node{
-					{
+			for _, node := range nodes[cmd.Target] {
+				switch n := node.(type) {
+
+				case *html.Node:
+					for c := n.FirstChild; c != nil; c = c.NextSibling {
+						n.RemoveChild(c)
+					}
+
+					n.AppendChild(&html.Node{
 						Type: html.TextNode,
 						Data: cmd.Text,
-					},
-				}
-				continue
-			}
+					})
 
-			for _, node := range parent.nodes {
-				for c := node.FirstChild; c != nil; c = c.NextSibling {
-					node.RemoveChild(c)
-				}
+				case *fragment:
+					n.nodes = []*html.Node{
+						{
+							Type: html.TextNode,
+							Data: cmd.Text,
+						},
+					}
 
-				node.AppendChild(&html.Node{
-					Type: html.TextNode,
-					Data: cmd.Text,
-				})
+				case content:
+					for c := n.parent.FirstChild; c != nil; c = c.NextSibling {
+						n.parent.RemoveChild(c)
+					}
+
+					n.parent.AppendChild(&html.Node{
+						Type: html.TextNode,
+						Data: cmd.Text,
+					})
+
+				}
 			}
 
 		case commands.HtmlSubCommand:
-			parent := nodes[cmd.Target]
-			if parent == nil {
-				continue
-			}
 
-			if parent.isFragment {
-				parent.nodes = template.WithFallback(cmd.Html).GetFragment(nil)
-				continue
-			}
+			for _, node := range nodes[cmd.Target] {
+				switch n := node.(type) {
 
-			for _, node := range parent.nodes {
-				for c := node.FirstChild; c != nil; c = c.NextSibling {
-					node.RemoveChild(c)
-				}
+				case *html.Node:
+					for c := n.FirstChild; c != nil; c = c.NextSibling {
+						n.RemoveChild(c)
+					}
 
-				for _, child := range template.WithFallback(cmd.Html).GetFragment(node) {
-					node.AppendChild(child)
+					for _, child := range template.WithFallback(cmd.Html).GetFragment(n) {
+						n.AppendChild(child)
+					}
+
+				case *fragment:
+					n.nodes = template.WithFallback(cmd.Html).GetFragment(nil)
+
+				case content:
+					for c := n.parent.FirstChild; c != nil; c = c.NextSibling {
+						n.parent.RemoveChild(c)
+					}
+
+					for _, child := range template.WithFallback(cmd.Html).GetFragment(n.parent) {
+						n.parent.AppendChild(child)
+					}
+
 				}
 			}
 
 		case commands.AttrSubCommand:
-			parent := nodes[cmd.Target]
-			if parent == nil || parent.isFragment {
-				continue
-			}
-
 		loop:
-			for _, node := range parent.nodes {
-				for i, attr := range node.Attr {
-					if attr.Key == cmd.Attr {
-						node.Attr[i].Val = cmd.Value
-						continue loop
-					}
-				}
+			for _, node := range nodes[cmd.Target] {
+				switch n := node.(type) {
 
-				node.Attr = append(node.Attr, html.Attribute{
-					Key: cmd.Attr,
-					Val: cmd.Value,
-				})
+				case *html.Node:
+					for i, attr := range n.Attr {
+						if attr.Key == cmd.Attr {
+							n.Attr[i].Val = cmd.Value
+							continue loop
+						}
+					}
+
+					n.Attr = append(n.Attr, html.Attribute{
+						Key: cmd.Attr,
+						Val: cmd.Value,
+					})
+
+				}
 			}
 
 		case commands.RmAttrSubCommand:
-			parent := nodes[cmd.Target]
-			if parent == nil || parent.isFragment {
-				continue
-			}
+			for _, node := range nodes[cmd.Target] {
+				switch n := node.(type) {
 
-			for _, node := range parent.nodes {
-				for i, attr := range node.Attr {
-					if attr.Key == cmd.RmAttr {
-						node.Attr = append(node.Attr[:i], node.Attr[i+1:]...)
-						break
+				case *html.Node:
+					for i, attr := range n.Attr {
+						if attr.Key == cmd.RmAttr {
+							n.Attr = append(n.Attr[:i], n.Attr[i+1:]...)
+							break
+						}
 					}
+
 				}
 			}
 
 		case commands.RemoveSubCommand:
-			parent := nodes[cmd.Remove]
-			if parent == nil || parent.isFragment {
-				continue
-			}
+			for _, node := range nodes[cmd.Remove] {
+				switch n := node.(type) {
 
-			for _, node := range parent.nodes {
-				node.Parent.RemoveChild(node)
+				case *html.Node:
+					if n.Parent != nil {
+						n.Parent.RemoveChild(n)
+					}
+
+				case content:
+					for c := n.parent.FirstChild; c != nil; c = c.NextSibling {
+						n.parent.RemoveChild(c)
+					}
+
+				}
 			}
 
 		case commands.InsertBeforeSubCommand:
-			parent := nodes[cmd.Parent]
-			ref := nodes[cmd.Ref]
-			newChild := nodes[cmd.InsertBefore]
+			parents := nodes[cmd.Parent]
+		ploop:
+			for _, node := range parents {
+				switch n := node.(type) {
 
-			if parent == nil || newChild == nil {
-				continue
-			}
+				case *html.Node:
+					nodesToInsert := getNodesToInsert(nodes, cmd.InsertBefore, n, len(parents) > 1)
 
-			if parent.isFragment {
-			top:
-				for _, node := range parent.nodes {
-					for i, refNode := range ref.nodes {
-						if refNode == node {
-							for _, new := range newChild.nodes {
-								if new.Parent != nil {
-									new.Parent.RemoveChild(new)
-								}
+					for _, r := range nodes[cmd.Ref] {
+						rn, ok := r.(*html.Node)
+						if !ok || rn.Parent != n {
+							continue
+						}
+
+						for _, ni := range nodesToInsert {
+							n.InsertBefore(ni, rn)
+						}
+
+						continue ploop
+					}
+
+					for _, ni := range nodesToInsert {
+						n.AppendChild(ni)
+					}
+
+				case content:
+					nodesToInsert := getNodesToInsert(nodes, cmd.InsertBefore, n.parent, len(parents) > 1)
+
+					for _, r := range nodes[cmd.Ref] {
+						rn, ok := r.(*html.Node)
+						if !ok || rn.Parent != n.parent {
+							continue
+						}
+
+						for _, ni := range nodesToInsert {
+							n.parent.InsertBefore(ni, rn)
+						}
+
+						continue ploop
+					}
+
+					for _, ni := range nodesToInsert {
+						n.parent.AppendChild(ni)
+					}
+
+				case *fragment:
+					nodesToInsert := getNodesToInsert(nodes, cmd.InsertBefore, nil, len(parents) > 1)
+
+					for _, r := range nodes[cmd.Ref] {
+						rn, ok := r.(*html.Node)
+						if !ok {
+							continue
+						}
+
+						var i int
+						var c *html.Node
+						var found bool
+						for i, c = range n.nodes {
+							if rn == c {
+								found = true
+								break
 							}
-
-							parent.nodes = append(parent.nodes[:i], append(newChild.nodes, parent.nodes[i:]...)...)
-							break top
-						}
-					}
-				}
-
-				continue
-			}
-
-			clone := false
-			for _, node := range parent.nodes {
-				for _, refNode := range ref.nodes {
-					if refNode.Parent != node {
-						continue
-					}
-
-					for _, new := range newChild.nodes {
-						if new.Parent != nil {
-							new.Parent.RemoveChild(new)
 						}
 
-						if clone {
-							new = util.CloneNode(new)
+						if !found {
+							continue
 						}
 
-						node.InsertBefore(new, refNode)
+						n.nodes = append(n.nodes[:i], append(nodesToInsert, n.nodes[i:]...)...)
+						continue ploop
 					}
 
-					clone = true
+					n.nodes = append(n.nodes, nodesToInsert...)
+
 				}
 			}
 
 		case commands.AppendSubCommand:
-			parent := nodes[cmd.Parent]
-			newChild := nodes[cmd.Append]
+			parents := nodes[cmd.Parent]
+			for _, node := range parents {
+				switch n := node.(type) {
 
-			if parent == nil || newChild == nil {
-				continue
-			}
-
-			for _, node := range newChild.nodes {
-				if node.Parent != nil {
-					node.Parent.RemoveChild(node)
-				}
-			}
-
-			if parent.isFragment {
-				parent.nodes = append(parent.nodes, newChild.nodes...)
-				if newChild.isFragment {
-					newChild.nodes = nil
-				}
-				continue
-			}
-
-			clone := false
-			for _, node := range parent.nodes {
-				for _, new := range newChild.nodes {
-					if clone {
-						new = util.CloneNode(new)
+				case *html.Node:
+					nodesToInsert := getNodesToInsert(nodes, cmd.Append, n, len(parents) > 1)
+					for _, ni := range nodesToInsert {
+						n.AppendChild(ni)
 					}
 
-					node.AppendChild(new)
-				}
+				case content:
+					nodesToInsert := getNodesToInsert(nodes, cmd.Append, n.parent, len(parents) > 1)
+					for _, ni := range nodesToInsert {
+						n.parent.AppendChild(ni)
+					}
 
-				clone = true
+				case *fragment:
+					nodesToInsert := getNodesToInsert(nodes, cmd.Append, nil, len(parents) > 1)
+					n.nodes = append(n.nodes, nodesToInsert...)
+
+				}
 			}
 
 		}
 
 	}
-
 }
