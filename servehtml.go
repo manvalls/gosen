@@ -1,6 +1,8 @@
 package gosen
 
 import (
+	"crypto/sha1"
+	"encoding/base64"
 	"encoding/json"
 	"net/http"
 
@@ -16,7 +18,9 @@ type TransactionHash struct {
 }
 
 func getHash(list []any) string {
-	return ""
+	result, _ := json.Marshal(list)
+	hash := sha1.Sum(result)
+	return base64.StdEncoding.EncodeToString(hash[:])
 }
 
 func (h *handler) serveHTML(w http.ResponseWriter, r *http.Request) {
