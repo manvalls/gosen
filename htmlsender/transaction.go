@@ -224,6 +224,109 @@ func (s *HTMLSender) transaction(c commands.TransactionCommand) {
 
 			nodes[cmd.Id] = result
 
+		case commands.ParentSubCommand:
+			result := []any{}
+
+			for _, node := range nodes[cmd.Target] {
+				switch n := node.(type) {
+
+				case *html.Node:
+					if n.Parent != nil {
+						result = append(result, n.Parent)
+					}
+
+				case content:
+					result = append(result, n.parent)
+
+				}
+			}
+
+			nodes[cmd.Parent] = result
+
+		case commands.FirstChildSubCommand:
+			result := []any{}
+
+			for _, node := range nodes[cmd.Target] {
+				switch n := node.(type) {
+
+				case *html.Node:
+					if n.FirstChild != nil {
+						result = append(result, n.FirstChild)
+					}
+
+				case content:
+					if n.parent.FirstChild != nil {
+						result = append(result, n.parent.FirstChild)
+					}
+
+				}
+			}
+
+			nodes[cmd.FirstChild] = result
+
+		case commands.LastChildSubCommand:
+			result := []any{}
+
+			for _, node := range nodes[cmd.Target] {
+				switch n := node.(type) {
+
+				case *html.Node:
+					if n.LastChild != nil {
+						result = append(result, n.LastChild)
+					}
+
+				case content:
+					if n.parent.LastChild != nil {
+						result = append(result, n.parent.LastChild)
+					}
+
+				}
+			}
+
+			nodes[cmd.LastChild] = result
+
+		case commands.NextSiblingSubCommand:
+			result := []any{}
+
+			for _, node := range nodes[cmd.Target] {
+				switch n := node.(type) {
+
+				case *html.Node:
+					if n.NextSibling != nil {
+						result = append(result, n.NextSibling)
+					}
+
+				case content:
+					if n.parent.NextSibling != nil {
+						result = append(result, n.parent.NextSibling)
+					}
+
+				}
+			}
+
+			nodes[cmd.NextSibling] = result
+
+		case commands.PrevSiblingSubCommand:
+			result := []any{}
+
+			for _, node := range nodes[cmd.Target] {
+				switch n := node.(type) {
+
+				case *html.Node:
+					if n.PrevSibling != nil {
+						result = append(result, n.PrevSibling)
+					}
+
+				case content:
+					if n.parent.PrevSibling != nil {
+						result = append(result, n.parent.PrevSibling)
+					}
+
+				}
+			}
+
+			nodes[cmd.PrevSibling] = result
+
 		case commands.CloneSubCommand:
 			result := []any{}
 

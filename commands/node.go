@@ -32,6 +32,61 @@ func (n Node) Content() Node {
 	return Node{n.tx, nextId}
 }
 
+type ParentSubCommand struct {
+	Parent uint `json:"parent"`
+	Target uint `json:"target"`
+}
+
+func (n Node) Parent() Node {
+	nextId := n.tx.getNextId()
+	n.tx.SendCommand(ParentSubCommand{nextId, n.id})
+	return Node{n.tx, nextId}
+}
+
+type FirstChildSubCommand struct {
+	FirstChild uint `json:"firstChild"`
+	Target     uint `json:"target"`
+}
+
+func (n Node) FirstChild() Node {
+	nextId := n.tx.getNextId()
+	n.tx.SendCommand(FirstChildSubCommand{nextId, n.id})
+	return Node{n.tx, nextId}
+}
+
+type LastChildSubCommand struct {
+	LastChild uint `json:"lastChild"`
+	Target    uint `json:"target"`
+}
+
+func (n Node) LastChild() Node {
+	nextId := n.tx.getNextId()
+	n.tx.SendCommand(LastChildSubCommand{nextId, n.id})
+	return Node{n.tx, nextId}
+}
+
+type NextSiblingSubCommand struct {
+	NextSibling uint `json:"nextSibling"`
+	Target      uint `json:"target"`
+}
+
+func (n Node) NextSibling() Node {
+	nextId := n.tx.getNextId()
+	n.tx.SendCommand(NextSiblingSubCommand{nextId, n.id})
+	return Node{n.tx, nextId}
+}
+
+type PrevSiblingSubCommand struct {
+	PrevSibling uint `json:"prevSibling"`
+	Target      uint `json:"target"`
+}
+
+func (n Node) PrevSibling() Node {
+	nextId := n.tx.getNextId()
+	n.tx.SendCommand(PrevSiblingSubCommand{nextId, n.id})
+	return Node{n.tx, nextId}
+}
+
 // Creation
 
 type CloneSubCommand struct {

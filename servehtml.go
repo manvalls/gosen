@@ -57,10 +57,8 @@ func (h *handler) serveHTML(w http.ResponseWriter, r *http.Request) {
 			head := tx.S("head")
 
 			head.InsertBefore(
-				head.S("*:first-child"),
-				tx.Fragment(
-					Raw(`<script type="text/javascript">window.__GOSEN_HYDRATION__ = `+string(hydrationData)+`;</script>`),
-				),
+				Raw(`<script type="text/javascript">window.__GOSEN_HYDRATION__ = `+string(hydrationData)+`;</script>`),
+				head.FirstChild(),
 			)
 
 			tx.Commit()
