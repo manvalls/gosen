@@ -8,7 +8,16 @@ import (
 
 type App struct {
 	Hydrate       bool
+	GetRunHandler func(url string) http.Handler
 	selectorCache *selectorcache.SelectorCache
+}
+
+func defaultGetRunHandler(url string) http.Handler {
+	if url[0] == '/' {
+		return http.DefaultServeMux
+	}
+
+	return nil
 }
 
 type handler struct {
@@ -23,6 +32,7 @@ func (h *handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 func NewApp() *App {
 	return &App{
 		Hydrate:       true,
+		GetRunHandler: defaultGetRunHandler,
 		selectorCache: selectorcache.New(),
 	}
 }
