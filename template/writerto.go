@@ -7,11 +7,11 @@ import (
 	"golang.org/x/net/html"
 )
 
-type writeTemplate struct {
+type writerToTemplate struct {
 	writerTo io.WriterTo
 }
 
-func (t *writeTemplate) GetFragment(context *html.Node) []*html.Node {
+func (t *writerToTemplate) GetFragment(context *html.Node) []*html.Node {
 	reader, writer := io.Pipe()
 	go func() {
 		t.writerTo.WriteTo(writer)
@@ -22,12 +22,12 @@ func (t *writeTemplate) GetFragment(context *html.Node) []*html.Node {
 	return fragment
 }
 
-func (t *writeTemplate) MarshalText() (text []byte, err error) {
+func (t *writerToTemplate) MarshalText() (text []byte, err error) {
 	buffer := &bytes.Buffer{}
 	_, err = t.writerTo.WriteTo(buffer)
 	return buffer.Bytes(), err
 }
 
-func Write(writerTo io.WriterTo) Template {
-	return &writeTemplate{writerTo}
+func WriterTo(writerTo io.WriterTo) Template {
+	return &writerToTemplate{writerTo}
 }
