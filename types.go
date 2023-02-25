@@ -17,10 +17,6 @@ type TemplateFactory = template.TemplateFactory
 type ReadCloserFactory = template.ReadCloserFactory
 type Empty = template.Empty
 
-func Cache(t Template) Template {
-	return template.Cache(t)
-}
-
 func Defer(t TemplateFactory) Template {
 	return template.Defer(t)
 }
@@ -57,10 +53,10 @@ func WithFallback(t Template) Template {
 	return template.WithFallback(t)
 }
 
-func Write(w io.WriterTo) Template {
-	return template.Write(w)
+func WriterTo(w io.WriterTo) Template {
+	return template.WriterTo(w)
 }
 
-func WriteFunc(f func(io.Writer) error) Template {
-	return template.WriteFunc(f)
+func WriterFunc(f func(io.Writer) error) Template {
+	return template.WriterFunc(f)
 }
