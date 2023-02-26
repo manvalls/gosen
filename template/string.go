@@ -6,19 +6,36 @@ import (
 	"golang.org/x/net/html"
 )
 
-type stringTemplate struct {
+type StringTemplate struct {
 	text string
 }
 
-func (t *stringTemplate) GetFragment(context *html.Node) []*html.Node {
+func (t *StringTemplate) GetFragment(context *html.Node) []*html.Node {
 	nodes, _ := html.ParseFragment(strings.NewReader(t.text), context)
 	return nodes
 }
 
-func (t *stringTemplate) MarshalText() (text []byte, err error) {
+func (t *StringTemplate) MarshalText() (text []byte, err error) {
 	return []byte(t.text), nil
 }
 
-func String(text string) Template {
-	return &stringTemplate{text}
+func (t *StringTemplate) Min() PreloadableTemplate {
+	minifierMutex.Lock()
+	defer minifierMutex.Unlock()
+
+	m := getMinifier()
+	text, err := m.String("text/html", t.text)
+	if err != nil {
+		panic(err)
+	}
+
+	return PreloadableTemplate{String(text)}
+}
+
+func (t *StringTemplate) Preload() Template {
+	return Preload(t)
+}
+
+func String(text string) *StringTemplate {
+	return &StringTemplate{text}
 }

@@ -7,3 +7,8 @@ require (
 	github.com/manvalls/mutexmap v0.0.0-20221231161330-adb7b2b0cec7
 	golang.org/x/net v0.5.0
 )
+
+require (
+	github.com/tdewolff/minify v2.3.6+incompatible // indirect
+	github.com/tdewolff/parse v2.3.4+incompatible // indirect
+)

@@ -2,11 +2,11 @@ package template
 
 import "golang.org/x/net/html"
 
-type rawTemplate struct {
+type RawTemplate struct {
 	text string
 }
 
-func (t *rawTemplate) GetFragment(context *html.Node) []*html.Node {
+func (t *RawTemplate) GetFragment(context *html.Node) []*html.Node {
 	return []*html.Node{
 		{
 			Type: html.RawNode,
@@ -15,10 +15,23 @@ func (t *rawTemplate) GetFragment(context *html.Node) []*html.Node {
 	}
 }
 
-func (t *rawTemplate) MarshalText() (text []byte, err error) {
+func (t *RawTemplate) MarshalText() (text []byte, err error) {
 	return []byte(t.text), nil
 }
 
+func (t *RawTemplate) Min() Template {
+	minifierMutex.Lock()
+	defer minifierMutex.Unlock()
+
+	m := getMinifier()
+	text, err := m.String("text/html", t.text)
+	if err != nil {
+		panic(err)
+	}
+
+	return &RawTemplate{text}
+}
+
 func Raw(text string) Template {
-	return &rawTemplate{text}
+	return &RawTemplate{text}
 }

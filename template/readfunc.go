@@ -10,6 +10,6 @@ func (f *funcReadCloserFactory) ReadCloser() (io.ReadCloser, error) {
 	return f.f()
 }
 
-func ReadFunc(f func() (io.ReadCloser, error)) Template {
+func ReadFunc(f func() (io.ReadCloser, error)) *ReadTemplate {
 	return Read(&funcReadCloserFactory{f})
 }

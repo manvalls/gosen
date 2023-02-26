@@ -2,6 +2,7 @@ package template
 
 import (
 	"io"
+	"io/ioutil"
 
 	"golang.org/x/net/html"
 )
@@ -10,11 +11,11 @@ type ReadCloserFactory interface {
 	ReadCloser() (io.ReadCloser, error)
 }
 
-type readTemplate struct {
+type ReadTemplate struct {
 	builder ReadCloserFactory
 }
 
-func (t *readTemplate) GetFragment(context *html.Node) []*html.Node {
+func (t *ReadTemplate) GetFragment(context *html.Node) []*html.Node {
 	readCloser, err := t.builder.ReadCloser()
 	if err != nil {
 		return nil
@@ -25,7 +26,7 @@ func (t *readTemplate) GetFragment(context *html.Node) []*html.Node {
 	return fragment
 }
 
-func (t *readTemplate) MarshalText() (text []byte, err error) {
+func (t *ReadTemplate) MarshalText() (text []byte, err error) {
 	readCloser, err := t.builder.ReadCloser()
 	if err != nil {
 		return nil, err
@@ -36,6 +37,29 @@ func (t *readTemplate) MarshalText() (text []byte, err error) {
 	return text, err
 }
 
-func Read(builder ReadCloserFactory) Template {
-	return &readTemplate{builder}
+func (t *ReadTemplate) Min() PreloadableTemplate {
+	minifierMutex.Lock()
+	defer minifierMutex.Unlock()
+
+	m := getMinifier()
+	readCloser, err := t.builder.ReadCloser()
+	if err != nil {
+		panic(err)
+	}
+
+	r := m.Reader("text/html", readCloser)
+	bytes, err := ioutil.ReadAll(r)
+	if err != nil {
+		panic(err)
+	}
+
+	return PreloadableTemplate{String(string(bytes))}
+}
+
+func (t *ReadTemplate) Preload() Template {
+	return Preload(t)
+}
+
+func Read(builder ReadCloserFactory) *ReadTemplate {
+	return &ReadTemplate{builder}
 }
