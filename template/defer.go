@@ -1,6 +1,7 @@
 package template
 
 import (
+	"io"
 	"sync"
 
 	"golang.org/x/net/html"
@@ -31,6 +32,10 @@ func (t *deferredTemplate) GetFragment(context *html.Node) []*html.Node {
 
 func (t *deferredTemplate) MarshalText() (text []byte, err error) {
 	return t.getTemplate().MarshalText()
+}
+
+func (t *deferredTemplate) WriteHash(w io.Writer) {
+	t.getTemplate().WriteHash(w)
 }
 
 func Defer(builder TemplateFactory) Template {

@@ -1,6 +1,7 @@
 package template
 
 import (
+	"io"
 	"strings"
 
 	"golang.org/x/net/html"
@@ -17,6 +18,10 @@ func (t *StringTemplate) GetFragment(context *html.Node) []*html.Node {
 
 func (t *StringTemplate) MarshalText() (text []byte, err error) {
 	return []byte(t.text), nil
+}
+
+func (t *StringTemplate) WriteHash(w io.Writer) {
+	w.Write([]byte(t.text))
 }
 
 func (t *StringTemplate) Min() PreloadableTemplate {

@@ -1,6 +1,10 @@
 package template
 
-import "golang.org/x/net/html"
+import (
+	"io"
+
+	"golang.org/x/net/html"
+)
 
 type RawTemplate struct {
 	text string
@@ -17,6 +21,10 @@ func (t *RawTemplate) GetFragment(context *html.Node) []*html.Node {
 
 func (t *RawTemplate) MarshalText() (text []byte, err error) {
 	return []byte(t.text), nil
+}
+
+func (t *RawTemplate) WriteHash(w io.Writer) {
+	w.Write([]byte(t.text))
 }
 
 func (t *RawTemplate) Min() Template {

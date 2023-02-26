@@ -28,6 +28,22 @@ func (t *WriterToTemplate) MarshalText() (text []byte, err error) {
 	return buffer.Bytes(), err
 }
 
+func (t *WriterToTemplate) WriteHash(w io.Writer) {
+	t.writerTo.WriteTo(w)
+}
+
+func (t *WriterToTemplate) Min() PreloadableTemplate {
+	return PreloadableTemplate{&WriterToTemplate{&minWriterTo{t.writerTo}}}
+}
+
+func (t *WriterToTemplate) Preload() Template {
+	return Preload(t)
+}
+
+func WriterTo(writerTo io.WriterTo) *WriterToTemplate {
+	return &WriterToTemplate{writerTo}
+}
+
 type minWriterTo struct {
 	io.WriterTo
 }
@@ -42,16 +58,4 @@ func (mw *minWriterTo) WriteTo(w io.Writer) (int64, error) {
 	n, err := mw.WriterTo.WriteTo(mfw)
 	mfw.Close()
 	return n, err
-}
-
-func (t *WriterToTemplate) Min() PreloadableTemplate {
-	return PreloadableTemplate{&WriterToTemplate{&minWriterTo{t.writerTo}}}
-}
-
-func (t *WriterToTemplate) Preload() Template {
-	return Preload(t)
-}
-
-func WriterTo(writerTo io.WriterTo) *WriterToTemplate {
-	return &WriterToTemplate{writerTo}
 }

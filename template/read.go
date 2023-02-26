@@ -37,6 +37,19 @@ func (t *ReadTemplate) MarshalText() (text []byte, err error) {
 	return text, err
 }
 
+func (t *ReadTemplate) WriteHash(w io.Writer) {
+	readCloser, err := t.builder.ReadCloser()
+	if err != nil {
+		panic(err)
+	}
+
+	_, err = io.Copy(w, readCloser)
+	readCloser.Close()
+	if err != nil {
+		panic(err)
+	}
+}
+
 func (t *ReadTemplate) Min() PreloadableTemplate {
 	minifierMutex.Lock()
 	defer minifierMutex.Unlock()

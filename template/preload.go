@@ -1,13 +1,18 @@
 package template
 
 import (
+	"encoding/binary"
+	"io"
+
 	"github.com/manvalls/gosen/util"
+	"github.com/zeebo/xxh3"
 	"golang.org/x/net/html"
 )
 
 type preloadedTemplate struct {
 	fragment []*html.Node
 	text     []byte
+	hash     []byte
 }
 
 func (t *preloadedTemplate) GetFragment(context *html.Node) []*html.Node {
@@ -23,6 +28,10 @@ func (t *preloadedTemplate) MarshalText() (text []byte, err error) {
 	return t.text, nil
 }
 
+func (t *preloadedTemplate) WriteHash(w io.Writer) {
+	w.Write(t.hash)
+}
+
 func Preload(t Template) Template {
 	fragment := t.GetFragment(nil)
 	text, err := t.MarshalText()
@@ -30,9 +39,14 @@ func Preload(t Template) Template {
 		panic(err)
 	}
 
+	h := xxh3.Hash(text)
+	hash := make([]byte, 8)
+	binary.PutUvarint(hash, h)
+
 	return &preloadedTemplate{
 		fragment: fragment,
 		text:     text,
+		hash:     hash,
 	}
 }
 
