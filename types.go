@@ -60,3 +60,7 @@ func WriterTo(w io.WriterTo) Template {
 func WriterFunc(f func(io.Writer) error) Template {
 	return template.WriterFunc(f)
 }
+
+func Preload(t Template) Template {
+	return template.Preload(t)
+}
