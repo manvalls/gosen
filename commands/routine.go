@@ -45,7 +45,11 @@ func (r *Routine) Subroutine() Routine {
 }
 
 func (r *Routine) Tx() *Transaction {
-	return &Transaction{r.sender, nil, &sync.Mutex{}, 0, r.id, xxh3.New()}
+	return &Transaction{r.sender, nil, &sync.Mutex{}, 0, r.id, xxh3.New(), false}
+}
+
+func (r *Routine) Once() *Transaction {
+	return &Transaction{r.sender, nil, &sync.Mutex{}, 0, r.id, xxh3.New(), true}
 }
 
 func (r *Routine) UnmarshalJSON(data []byte) error {

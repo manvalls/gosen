@@ -17,12 +17,14 @@ type Transaction struct {
 	nextId   uint64
 	routine  uint64
 	hash     hash.Hash
+	once     bool
 }
 
 type TransactionCommand struct {
 	Transaction []any  `json:"tx"`
 	Routine     uint64 `json:"routine,omitempty"`
 	Hash        string `json:"hash,omitempty"`
+	Once        bool   `json:"once,omitempty"`
 }
 
 func (t *Transaction) getNextId() uint64 {
@@ -161,7 +163,7 @@ func (t *Transaction) Commit() {
 
 	commands := t.commands
 	t.commands = nil
-	t.sender.SendCommand(TransactionCommand{commands, t.routine, base64.StdEncoding.EncodeToString(t.hash.Sum(nil))})
+	t.sender.SendCommand(TransactionCommand{commands, t.routine, base64.StdEncoding.EncodeToString(t.hash.Sum(nil)), t.once})
 }
 
 // Selectors

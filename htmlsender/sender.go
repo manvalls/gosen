@@ -2,6 +2,7 @@ package htmlsender
 
 import (
 	"io"
+	"sync"
 
 	"github.com/manvalls/gosen/commands"
 	"github.com/manvalls/gosen/selectorcache"
@@ -14,6 +15,8 @@ type HTMLSender struct {
 	mutex         *mutexmap.MutexMap[uint64]
 	document      *html.Node
 	selectorCache *selectorcache.SelectorCache
+	once          map[string]bool
+	onceMutex     *sync.Mutex
 }
 
 func NewHTMLSender(cache *selectorcache.SelectorCache) *HTMLSender {
@@ -56,20 +59,13 @@ func NewHTMLSender(cache *selectorcache.SelectorCache) *HTMLSender {
 		mutex:         mutexmap.NewMutexMap[uint64](),
 		document:      document,
 		selectorCache: cache,
+		once:          map[string]bool{},
+		onceMutex:     &sync.Mutex{},
 	}
-}
-
-func (s *HTMLSender) run(c commands.RunCommand) {
-	// TODO
 }
 
 func (s *HTMLSender) SendCommand(command any) {
 	switch c := command.(type) {
-
-	case commands.RunCommand:
-		s.mutex.Lock(c.Routine)
-		defer s.mutex.Unlock(c.Routine)
-		s.run(c)
 
 	case commands.StartRoutineCommand:
 		s.mutex.Lock(c.StartRoutine)

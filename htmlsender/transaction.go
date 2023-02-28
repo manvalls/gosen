@@ -174,6 +174,17 @@ func getNodesToInsert(nodes map[uint64][]any, toInsert any, context *html.Node, 
 }
 
 func (s *HTMLSender) transaction(c commands.TransactionCommand) {
+	if c.Once {
+		s.onceMutex.Lock()
+
+		if s.once[c.Hash] {
+			s.onceMutex.Unlock()
+			return
+		}
+
+		s.once[c.Hash] = true
+		s.onceMutex.Unlock()
+	}
 
 	nodes := make(map[uint64][]any)
 	nodes[0] = []any{s.document}
