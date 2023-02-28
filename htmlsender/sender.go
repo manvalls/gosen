@@ -11,7 +11,7 @@ import (
 )
 
 type HTMLSender struct {
-	mutex         *mutexmap.MutexMap[uint]
+	mutex         *mutexmap.MutexMap[uint64]
 	document      *html.Node
 	selectorCache *selectorcache.SelectorCache
 }
@@ -53,7 +53,7 @@ func NewHTMLSender(cache *selectorcache.SelectorCache) *HTMLSender {
 	htmlNode.AppendChild(body)
 
 	return &HTMLSender{
-		mutex:         mutexmap.NewMutexMap[uint](),
+		mutex:         mutexmap.NewMutexMap[uint64](),
 		document:      document,
 		selectorCache: cache,
 	}

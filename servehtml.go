@@ -1,8 +1,6 @@
 package gosen
 
 import (
-	"crypto/sha1"
-	"encoding/base64"
 	"encoding/json"
 	"net/http"
 
@@ -14,13 +12,7 @@ import (
 
 type TransactionHash struct {
 	Transaction string `json:"transaction"`
-	Routine     uint   `json:"routine,omitempty"`
-}
-
-func getHash(list []any) string {
-	result, _ := json.Marshal(list)
-	hash := sha1.Sum(result)
-	return base64.StdEncoding.EncodeToString(hash[:])
+	Routine     uint64 `json:"routine,omitempty"`
 }
 
 func (h *handler) serveHTML(w http.ResponseWriter, r *http.Request) {
@@ -48,9 +40,10 @@ func (h *handler) serveHTML(w http.ResponseWriter, r *http.Request) {
 	if h.app.Hydrate {
 		cmdList := []any{}
 		for _, cmd := range buffer.GetCommands() {
-			if tx, ok := cmd.(commands.TransactionCommand); ok {
-				cmdList = append(cmdList, TransactionHash{getHash(tx.Transaction), tx.Routine})
-			} else {
+			switch c := cmd.(type) {
+			case commands.TransactionCommand:
+				cmdList = append(cmdList, TransactionHash{c.Hash, c.Routine})
+			default:
 				cmdList = append(cmdList, cmd)
 			}
 		}

@@ -4,7 +4,7 @@ import "github.com/manvalls/gosen/template"
 
 type Node struct {
 	tx *Transaction
-	id uint
+	id uint64
 }
 
 // Selectors
@@ -22,8 +22,8 @@ func (n Node) All(selector string, args ...interface{}) Node {
 }
 
 type ContentSubCommand struct {
-	Id      uint `json:"id"`
-	Content uint `json:"content"`
+	Id      uint64 `json:"id"`
+	Content uint64 `json:"content"`
 }
 
 func (n Node) Content() Node {
@@ -33,8 +33,8 @@ func (n Node) Content() Node {
 }
 
 type ParentSubCommand struct {
-	Parent uint `json:"parent"`
-	Target uint `json:"target"`
+	Parent uint64 `json:"parent"`
+	Target uint64 `json:"target"`
 }
 
 func (n Node) Parent() Node {
@@ -44,8 +44,8 @@ func (n Node) Parent() Node {
 }
 
 type FirstChildSubCommand struct {
-	FirstChild uint `json:"firstChild"`
-	Target     uint `json:"target"`
+	FirstChild uint64 `json:"firstChild"`
+	Target     uint64 `json:"target"`
 }
 
 func (n Node) FirstChild() Node {
@@ -55,8 +55,8 @@ func (n Node) FirstChild() Node {
 }
 
 type LastChildSubCommand struct {
-	LastChild uint `json:"lastChild"`
-	Target    uint `json:"target"`
+	LastChild uint64 `json:"lastChild"`
+	Target    uint64 `json:"target"`
 }
 
 func (n Node) LastChild() Node {
@@ -66,8 +66,8 @@ func (n Node) LastChild() Node {
 }
 
 type NextSiblingSubCommand struct {
-	NextSibling uint `json:"nextSibling"`
-	Target      uint `json:"target"`
+	NextSibling uint64 `json:"nextSibling"`
+	Target      uint64 `json:"target"`
 }
 
 func (n Node) NextSibling() Node {
@@ -77,8 +77,8 @@ func (n Node) NextSibling() Node {
 }
 
 type PrevSiblingSubCommand struct {
-	PrevSibling uint `json:"prevSibling"`
-	Target      uint `json:"target"`
+	PrevSibling uint64 `json:"prevSibling"`
+	Target      uint64 `json:"target"`
 }
 
 func (n Node) PrevSibling() Node {
@@ -90,8 +90,8 @@ func (n Node) PrevSibling() Node {
 // Creation
 
 type CloneSubCommand struct {
-	Id    uint `json:"id"`
-	Clone uint `json:"clone"`
+	Id    uint64 `json:"id"`
+	Clone uint64 `json:"clone"`
 }
 
 func (n Node) Clone() Node {
@@ -103,7 +103,7 @@ func (n Node) Clone() Node {
 // InnerText and InnerHTML
 
 type TextSubCommand struct {
-	Target uint   `json:"target"`
+	Target uint64 `json:"target"`
 	Text   string `json:"text"`
 }
 
@@ -113,7 +113,7 @@ func (n Node) Text(text string) Node {
 }
 
 type HtmlSubCommand struct {
-	Target uint              `json:"target"`
+	Target uint64            `json:"target"`
 	Html   template.Template `json:"html"`
 }
 
@@ -125,7 +125,7 @@ func (n Node) Html(html template.Template) Node {
 // Attributes
 
 type AttrSubCommand struct {
-	Target uint   `json:"target"`
+	Target uint64 `json:"target"`
 	Attr   string `json:"attr"`
 	Value  string `json:"value"`
 }
@@ -136,7 +136,7 @@ func (n Node) Attr(name string, value string) Node {
 }
 
 type RmAttrSubCommand struct {
-	Target uint   `json:"target"`
+	Target uint64 `json:"target"`
 	RmAttr string `json:"rmAttr"`
 }
 
@@ -148,7 +148,7 @@ func (n Node) RmAttr(name string) Node {
 // Node manipulation
 
 type RemoveSubCommand struct {
-	Remove uint `json:"remove"`
+	Remove uint64 `json:"remove"`
 }
 
 func (n Node) Remove() {
@@ -156,9 +156,9 @@ func (n Node) Remove() {
 }
 
 type InsertBeforeSubCommand struct {
-	Parent       uint `json:"parent"`
-	Ref          uint `json:"ref"`
-	InsertBefore any  `json:"insertBefore"`
+	Parent       uint64 `json:"parent"`
+	Ref          uint64 `json:"ref"`
+	InsertBefore any    `json:"insertBefore"`
 }
 
 func (n Node) InsertBefore(child any, ref Node) Node {
@@ -180,8 +180,8 @@ func (n Node) InsertBefore(child any, ref Node) Node {
 }
 
 type AppendSubCommand struct {
-	Parent uint `json:"parent"`
-	Append any  `json:"append"`
+	Parent uint64 `json:"parent"`
+	Append any    `json:"append"`
 }
 
 func (n Node) Append(child any) Node {
@@ -205,12 +205,12 @@ func (n Node) Append(child any) Node {
 // Misc
 
 type WaitSubCommand struct {
-	Target  uint   `json:"target"`
+	Target  uint64 `json:"target"`
 	Wait    string `json:"wait"`
-	Timeout uint   `json:"timeout,omitempty"`
+	Timeout uint64 `json:"timeout,omitempty"`
 }
 
-func (n Node) Wait(event string, timeout uint) Node {
+func (n Node) Wait(event string, timeout uint64) Node {
 	n.tx.SendCommand(WaitSubCommand{n.id, event, timeout})
 	return n
 }

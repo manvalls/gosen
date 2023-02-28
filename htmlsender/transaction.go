@@ -117,12 +117,12 @@ func queryAll(parent []any, selector cascadia.Sel) []any {
 	return resultArray
 }
 
-func getNodesToInsert(nodes map[uint][]any, toInsert any, context *html.Node, clone bool) []*html.Node {
+func getNodesToInsert(nodes map[uint64][]any, toInsert any, context *html.Node, clone bool) []*html.Node {
 	if t, ok := toInsert.(template.Template); ok {
 		return t.GetFragment(context)
 	}
 
-	id, ok := toInsert.(uint)
+	id, ok := toInsert.(uint64)
 	if !ok {
 		return nil
 	}
@@ -175,7 +175,7 @@ func getNodesToInsert(nodes map[uint][]any, toInsert any, context *html.Node, cl
 
 func (s *HTMLSender) transaction(c commands.TransactionCommand) {
 
-	nodes := make(map[uint][]any)
+	nodes := make(map[uint64][]any)
 	nodes[0] = []any{s.document}
 
 	for _, command := range c.Transaction {

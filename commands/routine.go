@@ -1,15 +1,19 @@
 package commands
 
-import "sync"
+import (
+	"sync"
+
+	"github.com/zeebo/xxh3"
+)
 
 type Routine struct {
 	sender CommandSender
-	id     uint
+	id     uint64
 	mux    *sync.Mutex
-	nextId *uint
+	nextId *uint64
 }
 
-func (r *Routine) getNextId() uint {
+func (r *Routine) getNextId() uint64 {
 	r.mux.Lock()
 	defer r.mux.Unlock()
 	*r.nextId++
@@ -17,12 +21,12 @@ func (r *Routine) getNextId() uint {
 }
 
 func NewRoutine(sender CommandSender) *Routine {
-	return &Routine{sender, 0, &sync.Mutex{}, new(uint)}
+	return &Routine{sender, 0, &sync.Mutex{}, new(uint64)}
 }
 
 type RunCommand struct {
 	Run     string `json:"run"`
-	Routine uint   `json:"routine,omitempty"`
+	Routine uint64 `json:"routine,omitempty"`
 }
 
 func (r *Routine) Run(url string) {
@@ -30,8 +34,8 @@ func (r *Routine) Run(url string) {
 }
 
 type StartRoutineCommand struct {
-	StartRoutine uint `json:"startRoutine"`
-	Routine      uint `json:"routine,omitempty"`
+	StartRoutine uint64 `json:"startRoutine"`
+	Routine      uint64 `json:"routine,omitempty"`
 }
 
 func (r *Routine) Subroutine() Routine {
@@ -41,7 +45,7 @@ func (r *Routine) Subroutine() Routine {
 }
 
 func (r *Routine) Tx() *Transaction {
-	return &Transaction{r.sender, nil, &sync.Mutex{}, 0, r.id}
+	return &Transaction{r.sender, nil, &sync.Mutex{}, 0, r.id, xxh3.New()}
 }
 
 func (r *Routine) UnmarshalJSON(data []byte) error {
