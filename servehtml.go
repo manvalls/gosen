@@ -11,7 +11,7 @@ import (
 )
 
 type TransactionHash struct {
-	Transaction string `json:"transaction"`
+	Transaction string `json:"tx"`
 	Routine     uint64 `json:"routine,omitempty"`
 }
 
