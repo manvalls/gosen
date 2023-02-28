@@ -29,15 +29,6 @@ func (r *Routine) Run(url string) {
 	r.sender.SendCommand(RunCommand{url, r.id})
 }
 
-type RunOnceCommand struct {
-	RunOnce string `json:"runOnce"`
-	Routine uint   `json:"routine,omitempty"`
-}
-
-func (r *Routine) RunOnce(url string) {
-	r.sender.SendCommand(RunOnceCommand{url, r.id})
-}
-
 type StartRoutineCommand struct {
 	StartRoutine uint `json:"startRoutine"`
 	Routine      uint `json:"routine,omitempty"`

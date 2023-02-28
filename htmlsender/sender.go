@@ -63,10 +63,6 @@ func (s *HTMLSender) run(c commands.RunCommand) {
 	// TODO
 }
 
-func (s *HTMLSender) runOnce(c commands.RunOnceCommand) {
-	// TODO
-}
-
 func (s *HTMLSender) SendCommand(command any) {
 	switch c := command.(type) {
 
@@ -74,11 +70,6 @@ func (s *HTMLSender) SendCommand(command any) {
 		s.mutex.Lock(c.Routine)
 		defer s.mutex.Unlock(c.Routine)
 		s.run(c)
-
-	case commands.RunOnceCommand:
-		s.mutex.Lock(c.Routine)
-		defer s.mutex.Unlock(c.Routine)
-		s.runOnce(c)
 
 	case commands.StartRoutineCommand:
 		s.mutex.Lock(c.StartRoutine)
