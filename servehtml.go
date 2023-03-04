@@ -52,7 +52,7 @@ func (h *handler) serveHTML(w http.ResponseWriter, r *http.Request) {
 
 		hydrationData, err := json.Marshal(cmdList)
 		if err == nil {
-			html.PrependScript(`window.__GOSEN_HYDRATION__=` + string(hydrationData) + `;`)
+			html.PrependScript(`window.__GOSEN_HYDRATION__=` + string(hydrationData))
 		}
 	}
 
