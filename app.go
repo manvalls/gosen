@@ -26,6 +26,11 @@ type handler struct {
 }
 
 func (h *handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	if r.Header.Get("gosen-accept") == "json" {
+		h.serveJSON(w, r)
+		return
+	}
+
 	h.serveHTML(w, r)
 }
 

@@ -29,8 +29,10 @@ func (h *handler) serveHTML(w http.ResponseWriter, r *http.Request) {
 		sender = html
 	}
 
+	header := w.Header()
+
 	p := &Page{
-		Header:     w.Header(),
+		Header:     header,
 		StatusCode: http.StatusOK,
 		Routine:    commands.NewRoutine(sender),
 	}
@@ -50,6 +52,7 @@ func (h *handler) serveHTML(w http.ResponseWriter, r *http.Request) {
 
 		hydrationData, err := json.Marshal(cmdList)
 		if err == nil {
+			// TODO: avoid using the page object, do it directly on the htmlsender
 			tx := p.Tx()
 			head := tx.S("head")
 
@@ -62,6 +65,7 @@ func (h *handler) serveHTML(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
+	header.Add("vary", "gosen-accept")
 	w.WriteHeader(p.StatusCode)
 	html.Render(w)
 }
