@@ -108,10 +108,10 @@ func (t *Transaction) SendCommand(command any) {
 		t.hash.Write([]byte(c.Attr))
 		t.hash.Write([]byte(c.Value))
 
-	case RmAttrSubCommand:
+	case RemoveAttrSubCommand:
 		t.hash.Write([]byte{13})
 		binary.Write(t.hash, binary.LittleEndian, c.Target)
-		t.hash.Write([]byte(c.RmAttr))
+		t.hash.Write([]byte(c.RemoveAttr))
 
 	case RemoveSubCommand:
 		t.hash.Write([]byte{14})
@@ -147,6 +147,18 @@ func (t *Transaction) SendCommand(command any) {
 		binary.Write(t.hash, binary.LittleEndian, c.Target)
 		t.hash.Write([]byte(c.Wait))
 		binary.Write(t.hash, binary.LittleEndian, c.Timeout)
+
+	case AddToAttrSubCommand:
+		t.hash.Write([]byte{18})
+		binary.Write(t.hash, binary.LittleEndian, c.Target)
+		t.hash.Write([]byte(c.AddToAttr))
+		t.hash.Write([]byte(c.Value))
+
+	case RemoveFromAttrSubCommand:
+		t.hash.Write([]byte{19})
+		binary.Write(t.hash, binary.LittleEndian, c.Target)
+		t.hash.Write([]byte(c.RemoveFromAttr))
+		t.hash.Write([]byte(c.Value))
 
 	}
 

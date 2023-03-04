@@ -135,14 +135,44 @@ func (n Node) Attr(name string, value string) Node {
 	return n
 }
 
-type RmAttrSubCommand struct {
-	Target uint64 `json:"target"`
-	RmAttr string `json:"rmAttr"`
+type RemoveAttrSubCommand struct {
+	Target     uint64 `json:"target"`
+	RemoveAttr string `json:"removeAttr"`
 }
 
-func (n Node) RmAttr(name string) Node {
-	n.tx.SendCommand(RmAttrSubCommand{n.id, name})
+func (n Node) RemoveAttr(name string) Node {
+	n.tx.SendCommand(RemoveAttrSubCommand{n.id, name})
 	return n
+}
+
+type AddToAttrSubCommand struct {
+	Target    uint64 `json:"target"`
+	AddToAttr string `json:"addToAttr"`
+	Value     string `json:"value"`
+}
+
+func (n Node) AddToAttr(name string, value string) Node {
+	n.tx.SendCommand(AddToAttrSubCommand{n.id, name, value})
+	return n
+}
+
+type RemoveFromAttrSubCommand struct {
+	Target         uint64 `json:"target"`
+	RemoveFromAttr string `json:"removeFromAttr"`
+	Value          string `json:"value"`
+}
+
+func (n Node) RemoveFromAttr(name string, value string) Node {
+	n.tx.SendCommand(RemoveFromAttrSubCommand{n.id, name, value})
+	return n
+}
+
+func (n Node) AddClass(class string) Node {
+	return n.AddToAttr("class", class)
+}
+
+func (n Node) RemoveClass(class string) Node {
+	return n.RemoveFromAttr("class", class)
 }
 
 // Node manipulation

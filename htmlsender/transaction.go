@@ -4,6 +4,8 @@ package htmlsender
 // This file needs splitting up into multiple files, one per command.
 
 import (
+	"strings"
+
 	"github.com/andybalholm/cascadia"
 	"github.com/manvalls/gosen/commands"
 	"github.com/manvalls/gosen/template"
@@ -454,15 +456,64 @@ func (s *HTMLSender) transaction(c commands.TransactionCommand) {
 				}
 			}
 
-		case commands.RmAttrSubCommand:
+		case commands.RemoveAttrSubCommand:
 			for _, node := range nodes[cmd.Target] {
 				switch n := node.(type) {
 
 				case *html.Node:
 					for i, attr := range n.Attr {
-						if attr.Key == cmd.RmAttr {
+						if attr.Key == cmd.RemoveAttr {
 							n.Attr = append(n.Attr[:i], n.Attr[i+1:]...)
 							break
+						}
+					}
+
+				}
+			}
+
+		case commands.AddToAttrSubCommand:
+		addToAttrLoop:
+			for _, node := range nodes[cmd.Target] {
+				switch n := node.(type) {
+
+				case *html.Node:
+					for i, attr := range n.Attr {
+						if attr.Key == cmd.AddToAttr {
+							fields := strings.Fields(attr.Val)
+							for _, field := range fields {
+								if field == cmd.Value {
+									continue addToAttrLoop
+								}
+							}
+							n.Attr[i].Val = attr.Val + " " + cmd.Value
+							continue addToAttrLoop
+						}
+					}
+
+					n.Attr = append(n.Attr, html.Attribute{
+						Key: cmd.AddToAttr,
+						Val: cmd.Value,
+					})
+				}
+
+			}
+
+		case commands.RemoveFromAttrSubCommand:
+		rmFromAttrLoop:
+			for _, node := range nodes[cmd.Target] {
+				switch n := node.(type) {
+
+				case *html.Node:
+					for i, attr := range n.Attr {
+						if attr.Key == cmd.RemoveFromAttr {
+							fields := strings.Fields(attr.Val)
+							for j, field := range fields {
+								if field == cmd.Value {
+									fields = append(fields[:j], fields[j+1:]...)
+									n.Attr[i].Val = strings.Join(fields, " ")
+									continue rmFromAttrLoop
+								}
+							}
 						}
 					}
 
