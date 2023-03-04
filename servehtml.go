@@ -52,16 +52,7 @@ func (h *handler) serveHTML(w http.ResponseWriter, r *http.Request) {
 
 		hydrationData, err := json.Marshal(cmdList)
 		if err == nil {
-			// TODO: avoid using the page object, do it directly on the htmlsender
-			tx := p.Tx()
-			head := tx.S("head")
-
-			head.InsertBefore(
-				Raw(`<script type="text/javascript">window.__GOSEN_HYDRATION__ = `+string(hydrationData)+`;</script>`),
-				head.FirstChild(),
-			)
-
-			tx.Commit()
+			html.PrependScript(`window.__GOSEN_HYDRATION__=` + string(hydrationData) + `;`)
 		}
 	}
 

@@ -14,6 +14,7 @@ import (
 type HTMLSender struct {
 	mutex         *mutexmap.MutexMap[uint64]
 	document      *html.Node
+	head          *html.Node
 	selectorCache *selectorcache.SelectorCache
 	once          map[string]bool
 	onceMutex     *sync.Mutex
@@ -58,6 +59,7 @@ func NewHTMLSender(cache *selectorcache.SelectorCache) *HTMLSender {
 	return &HTMLSender{
 		mutex:         mutexmap.NewMutexMap[uint64](),
 		document:      document,
+		head:          head,
 		selectorCache: cache,
 		once:          map[string]bool{},
 		onceMutex:     &sync.Mutex{},
@@ -79,6 +81,21 @@ func (s *HTMLSender) SendCommand(command any) {
 		s.transaction(c)
 
 	}
+}
+
+func (s *HTMLSender) PrependScript(hydrationData string) {
+	script := &html.Node{
+		Type:     html.ElementNode,
+		DataAtom: atom.Script,
+		Data:     "script",
+	}
+
+	script.AppendChild(&html.Node{
+		Type: html.TextNode,
+		Data: hydrationData,
+	})
+
+	s.head.InsertBefore(script, s.head.FirstChild)
 }
 
 func (s *HTMLSender) Render(w io.Writer) error {
