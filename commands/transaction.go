@@ -44,13 +44,13 @@ func (t *Transaction) SendCommand(command any) {
 		t.hash.Write([]byte{0})
 		binary.Write(t.hash, binary.LittleEndian, c.Id)
 		binary.Write(t.hash, binary.LittleEndian, c.Parent)
-		t.hash.Write([]byte(fmt.Sprintf(c.Selector, c.Args...)))
+		t.hash.Write([]byte(c.Selector))
 
 	case SelectorAllSubCommand:
 		t.hash.Write([]byte{1})
 		binary.Write(t.hash, binary.LittleEndian, c.Id)
 		binary.Write(t.hash, binary.LittleEndian, c.Parent)
-		t.hash.Write([]byte(fmt.Sprintf(c.SelectorAll, c.Args...)))
+		t.hash.Write([]byte(c.SelectorAll))
 
 	case FragmentSubCommand:
 		t.hash.Write([]byte{2})
@@ -181,28 +181,40 @@ func (t *Transaction) Commit() {
 // Selectors
 
 type SelectorSubCommand struct {
-	Id       uint64        `json:"id"`
-	Selector string        `json:"selector"`
-	Args     []interface{} `json:"args,omitempty"`
-	Parent   uint64        `json:"parent,omitempty"`
+	Id       uint64 `json:"id"`
+	Selector string `json:"selector"`
+	Dynamic  bool   `json:"dynamic,omitempty"`
+	Parent   uint64 `json:"parent,omitempty"`
 }
 
 func (t *Transaction) S(selector string, args ...interface{}) Node {
 	nextId := t.getNextId()
-	t.SendCommand(SelectorSubCommand{nextId, selector, args, 0})
+
+	if len(args) > 0 {
+		t.SendCommand(SelectorSubCommand{nextId, fmt.Sprintf(selector, args...), true, 0})
+		return Node{t, nextId}
+	}
+
+	t.SendCommand(SelectorSubCommand{nextId, selector, false, 0})
 	return Node{t, nextId}
 }
 
 type SelectorAllSubCommand struct {
-	Id          uint64        `json:"id"`
-	SelectorAll string        `json:"selectorAll"`
-	Args        []interface{} `json:"args,omitempty"`
-	Parent      uint64        `json:"parent,omitempty"`
+	Id          uint64 `json:"id"`
+	SelectorAll string `json:"selectorAll"`
+	Dynamic     bool   `json:"dynamic,omitempty"`
+	Parent      uint64 `json:"parent,omitempty"`
 }
 
 func (t *Transaction) All(selector string, args ...interface{}) Node {
 	nextId := t.getNextId()
-	t.SendCommand(SelectorAllSubCommand{nextId, selector, args, 0})
+
+	if len(args) > 0 {
+		t.SendCommand(SelectorAllSubCommand{nextId, fmt.Sprintf(selector, args...), true, 0})
+		return Node{t, nextId}
+	}
+
+	t.SendCommand(SelectorAllSubCommand{nextId, selector, false, 0})
 	return Node{t, nextId}
 }
 

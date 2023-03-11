@@ -1,6 +1,10 @@
 package commands
 
-import "github.com/manvalls/gosen/template"
+import (
+	"fmt"
+
+	"github.com/manvalls/gosen/template"
+)
 
 type Node struct {
 	tx *Transaction
@@ -10,14 +14,27 @@ type Node struct {
 // Selectors
 
 func (n Node) S(selector string, args ...interface{}) Node {
+
 	nextId := n.tx.getNextId()
-	n.tx.SendCommand(SelectorSubCommand{nextId, selector, args, n.id})
+
+	if len(args) > 0 {
+		n.tx.SendCommand(SelectorSubCommand{nextId, fmt.Sprintf(selector, args...), true, n.id})
+		return Node{n.tx, nextId}
+	}
+
+	n.tx.SendCommand(SelectorSubCommand{nextId, selector, false, n.id})
 	return Node{n.tx, nextId}
 }
 
 func (n Node) All(selector string, args ...interface{}) Node {
 	nextId := n.tx.getNextId()
-	n.tx.SendCommand(SelectorAllSubCommand{nextId, selector, args, n.id})
+
+	if len(args) > 0 {
+		n.tx.SendCommand(SelectorAllSubCommand{nextId, fmt.Sprintf(selector, args...), true, n.id})
+		return Node{n.tx, nextId}
+	}
+
+	n.tx.SendCommand(SelectorAllSubCommand{nextId, selector, false, n.id})
 	return Node{n.tx, nextId}
 }
 

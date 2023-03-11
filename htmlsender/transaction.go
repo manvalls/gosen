@@ -197,7 +197,7 @@ func (s *HTMLSender) transaction(c commands.TransactionCommand) {
 
 		case commands.SelectorSubCommand:
 
-			sel, err := s.selectorCache.Get(cmd.Selector, cmd.Args)
+			sel, err := s.selectorCache.Get(cmd.Selector, cmd.Dynamic)
 			if err != nil {
 				continue
 			}
@@ -206,7 +206,7 @@ func (s *HTMLSender) transaction(c commands.TransactionCommand) {
 
 		case commands.SelectorAllSubCommand:
 
-			sel, err := s.selectorCache.Get(cmd.SelectorAll, cmd.Args)
+			sel, err := s.selectorCache.Get(cmd.SelectorAll, cmd.Dynamic)
 			if err != nil {
 				continue
 			}

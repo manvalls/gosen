@@ -1,7 +1,6 @@
 package selectorcache
 
 import (
-	"fmt"
 	"sync"
 
 	"github.com/andybalholm/cascadia"
@@ -18,9 +17,9 @@ func New() *SelectorCache {
 	}
 }
 
-func (s *SelectorCache) Get(selector string, args []interface{}) (cascadia.Sel, error) {
-	if len(args) > 0 {
-		return cascadia.Parse(fmt.Sprintf(selector, args...))
+func (s *SelectorCache) Get(selector string, dynamic bool) (cascadia.Sel, error) {
+	if dynamic {
+		return cascadia.Parse(selector)
 	}
 
 	s.mux.RLock()
