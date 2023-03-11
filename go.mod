@@ -12,5 +12,6 @@ require (
 	github.com/klauspost/cpuid/v2 v2.0.9 // indirect
 	github.com/tdewolff/minify v2.3.6+incompatible // indirect
 	github.com/tdewolff/parse v2.3.4+incompatible // indirect
+	github.com/valyala/fastjson v1.6.4 // indirect
 	github.com/zeebo/xxh3 v1.0.2 // indirect
 )
