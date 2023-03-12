@@ -54,38 +54,144 @@ func getSubCommand(v *fastjson.Value) any {
 		}
 	}
 
-	if v.Exists("parent") {
-		return ParentSubCommand{
-			Parent: v.GetUint64("parent"),
-			Target: v.GetUint64("target"),
-		}
-	}
+	if v.Exists("target") {
 
-	if v.Exists("firstChild") {
-		return FirstChildSubCommand{
-			FirstChild: v.GetUint64("firstChild"),
-			Target:     v.GetUint64("target"),
+		if v.Exists("parent") {
+			return ParentSubCommand{
+				Parent: v.GetUint64("parent"),
+				Target: v.GetUint64("target"),
+			}
 		}
-	}
 
-	if v.Exists("lastChild") {
-		return LastChildSubCommand{
-			LastChild: v.GetUint64("lastChild"),
-			Target:    v.GetUint64("target"),
+		if v.Exists("firstChild") {
+			return FirstChildSubCommand{
+				FirstChild: v.GetUint64("firstChild"),
+				Target:     v.GetUint64("target"),
+			}
 		}
-	}
 
-	if v.Exists("nextSibling") {
-		return NextSiblingSubCommand{
-			NextSibling: v.GetUint64("nextSibling"),
-			Target:      v.GetUint64("target"),
+		if v.Exists("lastChild") {
+			return LastChildSubCommand{
+				LastChild: v.GetUint64("lastChild"),
+				Target:    v.GetUint64("target"),
+			}
 		}
-	}
 
-	if v.Exists("prevSibling") {
-		return PrevSiblingSubCommand{
-			PrevSibling: v.GetUint64("prevSibling"),
-			Target:      v.GetUint64("target"),
+		if v.Exists("nextSibling") {
+			return NextSiblingSubCommand{
+				NextSibling: v.GetUint64("nextSibling"),
+				Target:      v.GetUint64("target"),
+			}
+		}
+
+		if v.Exists("prevSibling") {
+			return PrevSiblingSubCommand{
+				PrevSibling: v.GetUint64("prevSibling"),
+				Target:      v.GetUint64("target"),
+			}
+		}
+
+		if v.Exists("text") {
+			text := v.GetStringBytes("text")
+			if text == nil {
+				return nil
+			}
+
+			return TextSubCommand{
+				Target: v.GetUint64("target"),
+				Text:   string(text),
+			}
+		}
+
+		if v.Exists("html") {
+			html := v.GetStringBytes("html")
+			if html == nil {
+				return nil
+			}
+
+			return HtmlSubCommand{
+				Target: v.GetUint64("target"),
+				Html:   template.String(string(html)),
+			}
+		}
+
+		if v.Exists("attr") {
+			attr := v.GetStringBytes("attr")
+			if attr == nil {
+				return nil
+			}
+
+			value := v.GetStringBytes("value")
+			if value == nil {
+				return nil
+			}
+
+			return AttrSubCommand{
+				Target: v.GetUint64("target"),
+				Attr:   string(attr),
+				Value:  string(value),
+			}
+		}
+
+		if v.Exists("removeAttr") {
+			removeAttr := v.GetStringBytes("removeAttr")
+			if removeAttr == nil {
+				return nil
+			}
+
+			return RemoveAttrSubCommand{
+				Target:     v.GetUint64("target"),
+				RemoveAttr: string(removeAttr),
+			}
+		}
+
+		if v.Exists("addToAttr") {
+			addToAttr := v.GetStringBytes("addToAttr")
+			if addToAttr == nil {
+				return nil
+			}
+
+			value := v.GetStringBytes("value")
+			if value == nil {
+				return nil
+			}
+
+			return AddToAttrSubCommand{
+				Target:    v.GetUint64("target"),
+				AddToAttr: string(addToAttr),
+				Value:     string(value),
+			}
+		}
+
+		if v.Exists("removeFromAttr") {
+			removeFromAttr := v.GetStringBytes("removeFromAttr")
+			if removeFromAttr == nil {
+				return nil
+			}
+
+			value := v.GetStringBytes("value")
+			if value == nil {
+				return nil
+			}
+
+			return RemoveFromAttrSubCommand{
+				Target:         v.GetUint64("target"),
+				RemoveFromAttr: string(removeFromAttr),
+				Value:          string(value),
+			}
+		}
+
+		if v.Exists("wait") {
+			wait := v.GetStringBytes("wait")
+			if wait == nil {
+				return nil
+			}
+
+			return WaitSubCommand{
+				Target:  v.GetUint64("target"),
+				Wait:    string(wait),
+				Timeout: v.GetUint64("timeout"),
+			}
 		}
 	}
 
@@ -93,96 +199,6 @@ func getSubCommand(v *fastjson.Value) any {
 		return CloneSubCommand{
 			Id:    v.GetUint64("id"),
 			Clone: v.GetUint64("clone"),
-		}
-	}
-
-	if v.Exists("text") {
-		text := v.GetStringBytes("text")
-		if text == nil {
-			return nil
-		}
-
-		return TextSubCommand{
-			Target: v.GetUint64("target"),
-			Text:   string(text),
-		}
-	}
-
-	if v.Exists("html") {
-		html := v.GetStringBytes("html")
-		if html == nil {
-			return nil
-		}
-
-		return HtmlSubCommand{
-			Target: v.GetUint64("target"),
-			Html:   template.String(string(html)),
-		}
-	}
-
-	if v.Exists("attr") {
-		attr := v.GetStringBytes("attr")
-		if attr == nil {
-			return nil
-		}
-
-		value := v.GetStringBytes("value")
-		if value == nil {
-			return nil
-		}
-
-		return AttrSubCommand{
-			Target: v.GetUint64("target"),
-			Attr:   string(attr),
-			Value:  string(value),
-		}
-	}
-
-	if v.Exists("removeAttr") {
-		removeAttr := v.GetStringBytes("removeAttr")
-		if removeAttr == nil {
-			return nil
-		}
-
-		return RemoveAttrSubCommand{
-			Target:     v.GetUint64("target"),
-			RemoveAttr: string(removeAttr),
-		}
-	}
-
-	if v.Exists("addToAttr") {
-		addToAttr := v.GetStringBytes("addToAttr")
-		if addToAttr == nil {
-			return nil
-		}
-
-		value := v.GetStringBytes("value")
-		if value == nil {
-			return nil
-		}
-
-		return AddToAttrSubCommand{
-			Target:    v.GetUint64("target"),
-			AddToAttr: string(addToAttr),
-			Value:     string(value),
-		}
-	}
-
-	if v.Exists("removeFromAttr") {
-		removeFromAttr := v.GetStringBytes("removeFromAttr")
-		if removeFromAttr == nil {
-			return nil
-		}
-
-		value := v.GetStringBytes("value")
-		if value == nil {
-			return nil
-		}
-
-		return RemoveFromAttrSubCommand{
-			Target:         v.GetUint64("target"),
-			RemoveFromAttr: string(removeFromAttr),
-			Value:          string(value),
 		}
 	}
 
@@ -223,19 +239,6 @@ func getSubCommand(v *fastjson.Value) any {
 				Append: template.String(string(v.GetStringBytes("append"))),
 				Parent: v.GetUint64("parent"),
 			}
-		}
-	}
-
-	if v.Exists("wait") {
-		wait := v.GetStringBytes("wait")
-		if wait == nil {
-			return nil
-		}
-
-		return WaitSubCommand{
-			Target:  v.GetUint64("target"),
-			Wait:    string(wait),
-			Timeout: v.GetUint64("timeout"),
 		}
 	}
 
