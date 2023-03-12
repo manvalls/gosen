@@ -37,6 +37,7 @@ func (h *handler) serveHTML(w http.ResponseWriter, r *http.Request) {
 		Routine: commands.NewRoutine(sender, &commands.Runner{
 			GetRunHandler: h.app.GetRunHandler,
 			BaseRequest:   r,
+			Header:        header,
 		}),
 	}
 

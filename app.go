@@ -3,6 +3,7 @@ package gosen
 import (
 	"net/http"
 
+	"github.com/manvalls/gosen/commands"
 	"github.com/manvalls/gosen/selectorcache"
 )
 
@@ -26,6 +27,17 @@ type handler struct {
 }
 
 func (h *handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	if rw, ok := w.(*commands.RunnerWriter); ok {
+
+		h.f(&Page{
+			Header:     rw.Header(),
+			StatusCode: http.StatusOK,
+			Routine:    rw.Routine,
+		}, r)
+
+		return
+	}
+
 	if r.Header.Get("gosen-accept") == "json" {
 		h.serveJSON(w, r)
 		return
