@@ -117,45 +117,42 @@ func (t *Transaction) SendCommand(command any) {
 		t.hash.Write([]byte{14})
 		binary.Write(t.hash, binary.LittleEndian, c.Remove)
 
-	case InsertBeforeSubCommand:
+	case InsertNodeBeforeSubCommand:
 		t.hash.Write([]byte{15})
 		binary.Write(t.hash, binary.LittleEndian, c.Parent)
 		binary.Write(t.hash, binary.LittleEndian, c.Ref)
+		binary.Write(t.hash, binary.LittleEndian, c.InsertNodeBefore)
 
-		switch ib := c.InsertBefore.(type) {
-		case template.Template:
-			ib.WriteHash(t.hash)
-
-		case uint64:
-			binary.Write(t.hash, binary.LittleEndian, ib)
-		}
-
-	case AppendSubCommand:
+	case InsertBeforeSubCommand:
 		t.hash.Write([]byte{16})
 		binary.Write(t.hash, binary.LittleEndian, c.Parent)
+		binary.Write(t.hash, binary.LittleEndian, c.Ref)
+		c.InsertBefore.WriteHash(t.hash)
 
-		switch a := c.Append.(type) {
-		case template.Template:
-			a.WriteHash(t.hash)
+	case AppendNodeSubCommand:
+		t.hash.Write([]byte{17})
+		binary.Write(t.hash, binary.LittleEndian, c.Parent)
+		binary.Write(t.hash, binary.LittleEndian, c.AppendNode)
 
-		case uint64:
-			binary.Write(t.hash, binary.LittleEndian, a)
-		}
+	case AppendSubCommand:
+		t.hash.Write([]byte{18})
+		binary.Write(t.hash, binary.LittleEndian, c.Parent)
+		c.Append.WriteHash(t.hash)
 
 	case WaitSubCommand:
-		t.hash.Write([]byte{17})
+		t.hash.Write([]byte{19})
 		binary.Write(t.hash, binary.LittleEndian, c.Target)
 		t.hash.Write([]byte(c.Wait))
 		binary.Write(t.hash, binary.LittleEndian, c.Timeout)
 
 	case AddToAttrSubCommand:
-		t.hash.Write([]byte{18})
+		t.hash.Write([]byte{20})
 		binary.Write(t.hash, binary.LittleEndian, c.Target)
 		t.hash.Write([]byte(c.AddToAttr))
 		t.hash.Write([]byte(c.Value))
 
 	case RemoveFromAttrSubCommand:
-		t.hash.Write([]byte{19})
+		t.hash.Write([]byte{21})
 		binary.Write(t.hash, binary.LittleEndian, c.Target)
 		t.hash.Write([]byte(c.RemoveFromAttr))
 		t.hash.Write([]byte(c.Value))

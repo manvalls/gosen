@@ -208,37 +208,43 @@ func getSubCommand(v *fastjson.Value) any {
 		}
 	}
 
-	if v.Exists("insertBefore") {
-		switch v.Get("insertBefore").Type() {
-		case fastjson.TypeNumber:
-			return InsertBeforeSubCommand{
-				InsertBefore: v.GetUint64("insertBefore"),
-				Parent:       v.GetUint64("parent"),
-				Ref:          v.GetUint64("ref"),
-			}
+	if v.Exists("insertNodeBefore") {
+		return InsertNodeBeforeSubCommand{
+			InsertNodeBefore: v.GetUint64("insertNodeBefore"),
+			Parent:           v.GetUint64("parent"),
+			Ref:              v.GetUint64("ref"),
+		}
+	}
 
-		case fastjson.TypeString:
-			return InsertBeforeSubCommand{
-				InsertBefore: template.String(string(v.GetStringBytes("insertBefore"))),
-				Parent:       v.GetUint64("parent"),
-				Ref:          v.GetUint64("ref"),
-			}
+	if v.Exists("insertBefore") {
+		inserBefore := v.GetStringBytes("insertBefore")
+		if inserBefore == nil {
+			return nil
+		}
+
+		return InsertBeforeSubCommand{
+			InsertBefore: template.String(string(inserBefore)),
+			Parent:       v.GetUint64("parent"),
+			Ref:          v.GetUint64("ref"),
+		}
+	}
+
+	if v.Exists("appendNode") {
+		return AppendNodeSubCommand{
+			AppendNode: v.GetUint64("appendNode"),
+			Parent:     v.GetUint64("parent"),
 		}
 	}
 
 	if v.Exists("append") {
-		switch v.Get("append").Type() {
-		case fastjson.TypeNumber:
-			return AppendSubCommand{
-				Append: v.GetUint64("append"),
-				Parent: v.GetUint64("parent"),
-			}
+		append := v.GetStringBytes("append")
+		if append == nil {
+			return nil
+		}
 
-		case fastjson.TypeString:
-			return AppendSubCommand{
-				Append: template.String(string(v.GetStringBytes("append"))),
-				Parent: v.GetUint64("parent"),
-			}
+		return AppendSubCommand{
+			Append: template.String(string(append)),
+			Parent: v.GetUint64("parent"),
 		}
 	}
 

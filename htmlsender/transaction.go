@@ -119,16 +119,7 @@ func queryAll(parent []any, selector cascadia.Sel) []any {
 	return resultArray
 }
 
-func getNodesToInsert(nodes map[uint64][]any, toInsert any, context *html.Node, clone bool) []*html.Node {
-	if t, ok := toInsert.(template.Template); ok {
-		return t.GetFragment(context)
-	}
-
-	id, ok := toInsert.(uint64)
-	if !ok {
-		return nil
-	}
-
+func getNodesToInsert(nodes map[uint64][]any, id uint64, clone bool) []*html.Node {
 	result := []*html.Node{}
 	for _, node := range nodes[id] {
 		switch n := node.(type) {
@@ -537,6 +528,84 @@ func (s *HTMLSender) transaction(c commands.TransactionCommand) {
 				}
 			}
 
+		case commands.InsertNodeBeforeSubCommand:
+			parents := nodes[cmd.Parent]
+		inbloop:
+			for _, node := range parents {
+				switch n := node.(type) {
+
+				case *html.Node:
+					nodesToInsert := getNodesToInsert(nodes, cmd.InsertNodeBefore, len(parents) > 1)
+
+					for _, r := range nodes[cmd.Ref] {
+						rn, ok := r.(*html.Node)
+						if !ok || rn.Parent != n {
+							continue
+						}
+
+						for _, ni := range nodesToInsert {
+							n.InsertBefore(ni, rn)
+						}
+
+						continue inbloop
+					}
+
+					for _, ni := range nodesToInsert {
+						n.AppendChild(ni)
+					}
+
+				case content:
+					nodesToInsert := getNodesToInsert(nodes, cmd.InsertNodeBefore, len(parents) > 1)
+
+					for _, r := range nodes[cmd.Ref] {
+						rn, ok := r.(*html.Node)
+						if !ok || rn.Parent != n.parent {
+							continue
+						}
+
+						for _, ni := range nodesToInsert {
+							n.parent.InsertBefore(ni, rn)
+						}
+
+						continue inbloop
+					}
+
+					for _, ni := range nodesToInsert {
+						n.parent.AppendChild(ni)
+					}
+
+				case *fragment:
+					nodesToInsert := getNodesToInsert(nodes, cmd.InsertNodeBefore, len(parents) > 1)
+
+					for _, r := range nodes[cmd.Ref] {
+						rn, ok := r.(*html.Node)
+						if !ok {
+							continue
+						}
+
+						var i int
+						var c *html.Node
+						var found bool
+						for i, c = range n.nodes {
+							if rn == c {
+								found = true
+								break
+							}
+						}
+
+						if !found {
+							continue
+						}
+
+						n.nodes = append(n.nodes[:i], append(nodesToInsert, n.nodes[i:]...)...)
+						continue inbloop
+					}
+
+					n.nodes = append(n.nodes, nodesToInsert...)
+
+				}
+			}
+
 		case commands.InsertBeforeSubCommand:
 			parents := nodes[cmd.Parent]
 		ploop:
@@ -544,7 +613,7 @@ func (s *HTMLSender) transaction(c commands.TransactionCommand) {
 				switch n := node.(type) {
 
 				case *html.Node:
-					nodesToInsert := getNodesToInsert(nodes, cmd.InsertBefore, n, len(parents) > 1)
+					nodesToInsert := cmd.InsertBefore.GetFragment(n)
 
 					for _, r := range nodes[cmd.Ref] {
 						rn, ok := r.(*html.Node)
@@ -564,7 +633,7 @@ func (s *HTMLSender) transaction(c commands.TransactionCommand) {
 					}
 
 				case content:
-					nodesToInsert := getNodesToInsert(nodes, cmd.InsertBefore, n.parent, len(parents) > 1)
+					nodesToInsert := cmd.InsertBefore.GetFragment(n.parent)
 
 					for _, r := range nodes[cmd.Ref] {
 						rn, ok := r.(*html.Node)
@@ -584,7 +653,7 @@ func (s *HTMLSender) transaction(c commands.TransactionCommand) {
 					}
 
 				case *fragment:
-					nodesToInsert := getNodesToInsert(nodes, cmd.InsertBefore, nil, len(parents) > 1)
+					nodesToInsert := cmd.InsertBefore.GetFragment(nil)
 
 					for _, r := range nodes[cmd.Ref] {
 						rn, ok := r.(*html.Node)
@@ -615,25 +684,49 @@ func (s *HTMLSender) transaction(c commands.TransactionCommand) {
 				}
 			}
 
+		case commands.AppendNodeSubCommand:
+			parents := nodes[cmd.Parent]
+			for _, node := range parents {
+				switch n := node.(type) {
+
+				case *html.Node:
+					nodesToInsert := getNodesToInsert(nodes, cmd.AppendNode, len(parents) > 1)
+					for _, ni := range nodesToInsert {
+						n.AppendChild(ni)
+					}
+
+				case content:
+					nodesToInsert := getNodesToInsert(nodes, cmd.AppendNode, len(parents) > 1)
+					for _, ni := range nodesToInsert {
+						n.parent.AppendChild(ni)
+					}
+
+				case *fragment:
+					nodesToInsert := getNodesToInsert(nodes, cmd.AppendNode, len(parents) > 1)
+					n.nodes = append(n.nodes, nodesToInsert...)
+
+				}
+			}
+
 		case commands.AppendSubCommand:
 			parents := nodes[cmd.Parent]
 			for _, node := range parents {
 				switch n := node.(type) {
 
 				case *html.Node:
-					nodesToInsert := getNodesToInsert(nodes, cmd.Append, n, len(parents) > 1)
+					nodesToInsert := cmd.Append.GetFragment(n)
 					for _, ni := range nodesToInsert {
 						n.AppendChild(ni)
 					}
 
 				case content:
-					nodesToInsert := getNodesToInsert(nodes, cmd.Append, n.parent, len(parents) > 1)
+					nodesToInsert := cmd.Append.GetFragment(n.parent)
 					for _, ni := range nodesToInsert {
 						n.parent.AppendChild(ni)
 					}
 
 				case *fragment:
-					nodesToInsert := getNodesToInsert(nodes, cmd.Append, nil, len(parents) > 1)
+					nodesToInsert := cmd.Append.GetFragment(nil)
 					n.nodes = append(n.nodes, nodesToInsert...)
 
 				}

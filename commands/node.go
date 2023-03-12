@@ -202,50 +202,45 @@ func (n Node) Remove() {
 	n.tx.SendCommand(RemoveSubCommand{n.id})
 }
 
-type InsertBeforeSubCommand struct {
-	Parent       uint64 `json:"parent"`
-	Ref          uint64 `json:"ref"`
-	InsertBefore any    `json:"insertBefore"`
+type InsertNodeBeforeSubCommand struct {
+	Parent           uint64 `json:"parent"`
+	Ref              uint64 `json:"ref"`
+	InsertNodeBefore uint64 `json:"insertNodeBefore"`
 }
 
-func (n Node) InsertBefore(child any, ref Node) Node {
-	switch c := child.(type) {
+func (n Node) InsertNodeBefore(child Node, ref Node) Node {
+	n.tx.SendCommand(InsertNodeBeforeSubCommand{n.id, ref.id, child.id})
+	return n
+}
 
-	case Node:
-		if n.tx != c.tx || n.tx != ref.tx {
-			panic("Nodes must belong to the same transaction")
-		}
+type InsertBeforeSubCommand struct {
+	Parent       uint64            `json:"parent"`
+	Ref          uint64            `json:"ref"`
+	InsertBefore template.Template `json:"insertBefore"`
+}
 
-		n.tx.SendCommand(InsertBeforeSubCommand{n.id, ref.id, c.id})
+func (n Node) InsertBefore(child template.Template, ref Node) Node {
+	n.tx.SendCommand(InsertBeforeSubCommand{n.id, ref.id, child})
+	return n
+}
 
-	case template.Template:
-		n.tx.SendCommand(InsertBeforeSubCommand{n.id, ref.id, c})
+type AppendNodeSubCommand struct {
+	Parent     uint64 `json:"parent"`
+	AppendNode uint64 `json:"appendNode"`
+}
 
-	}
-
+func (n Node) AppendNode(child Node) Node {
+	n.tx.SendCommand(AppendNodeSubCommand{n.id, child.id})
 	return n
 }
 
 type AppendSubCommand struct {
-	Parent uint64 `json:"parent"`
-	Append any    `json:"append"`
+	Parent uint64            `json:"parent"`
+	Append template.Template `json:"append"`
 }
 
-func (n Node) Append(child any) Node {
-	switch c := child.(type) {
-
-	case Node:
-		if n.tx != c.tx {
-			panic("Nodes must belong to the same transaction")
-		}
-
-		n.tx.SendCommand(AppendSubCommand{n.id, c.id})
-
-	case template.Template:
-		n.tx.SendCommand(AppendSubCommand{n.id, c})
-
-	}
-
+func (n Node) Append(child template.Template) Node {
+	n.tx.SendCommand(AppendSubCommand{n.id, child})
 	return n
 }
 
