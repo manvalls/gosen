@@ -34,7 +34,7 @@ func (h *handler) serveHTML(w http.ResponseWriter, r *http.Request) {
 	p := &Page{
 		Header:     header,
 		StatusCode: http.StatusOK,
-		Routine:    commands.NewRoutine(sender),
+		Routine:    commands.NewRoutine(sender, nil),
 	}
 
 	h.f(p, r)

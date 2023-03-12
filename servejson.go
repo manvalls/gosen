@@ -15,7 +15,7 @@ func (h *handler) serveJSON(w http.ResponseWriter, r *http.Request) {
 	p := &Page{
 		Header:     header,
 		StatusCode: http.StatusOK,
-		Routine:    commands.NewRoutine(buffer),
+		Routine:    commands.NewRoutine(buffer, nil),
 	}
 
 	h.f(p, r)

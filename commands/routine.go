@@ -11,6 +11,8 @@ type Routine struct {
 	id     uint64
 	mux    *sync.Mutex
 	nextId *uint64
+
+	runHandler func(url string, routine *Routine)
 }
 
 func (r *Routine) getNextId() uint64 {
@@ -20,8 +22,8 @@ func (r *Routine) getNextId() uint64 {
 	return *r.nextId
 }
 
-func NewRoutine(sender CommandSender) *Routine {
-	return &Routine{sender, 0, &sync.Mutex{}, new(uint64)}
+func NewRoutine(sender CommandSender, runHandler func(url string, routine *Routine)) *Routine {
+	return &Routine{sender, 0, &sync.Mutex{}, new(uint64), runHandler}
 }
 
 type RunCommand struct {
@@ -30,6 +32,11 @@ type RunCommand struct {
 }
 
 func (r *Routine) Run(url string) {
+	if r.runHandler != nil {
+		r.runHandler(url, r)
+		return
+	}
+
 	r.sender.SendCommand(RunCommand{url, r.id})
 }
 
@@ -41,7 +48,7 @@ type StartRoutineCommand struct {
 func (r *Routine) Subroutine() Routine {
 	nextId := r.getNextId()
 	r.sender.SendCommand(StartRoutineCommand{nextId, r.id})
-	return Routine{r.sender, nextId, r.mux, r.nextId}
+	return Routine{r.sender, nextId, r.mux, r.nextId, r.runHandler}
 }
 
 func (r *Routine) Tx() *Transaction {
