@@ -193,7 +193,9 @@ func (s *HTMLSender) transaction(c commands.TransactionCommand) {
 				continue
 			}
 
+			s.txMux.RLock()
 			nodes[cmd.Id] = queryFirst(nodes[cmd.Parent], sel)
+			s.txMux.RUnlock()
 
 		case commands.SelectorAllSubCommand:
 
@@ -202,7 +204,9 @@ func (s *HTMLSender) transaction(c commands.TransactionCommand) {
 				continue
 			}
 
+			s.txMux.RLock()
 			nodes[cmd.Id] = queryAll(nodes[cmd.Parent], sel)
+			s.txMux.RUnlock()
 
 		case commands.FragmentSubCommand:
 
@@ -230,6 +234,7 @@ func (s *HTMLSender) transaction(c commands.TransactionCommand) {
 
 		case commands.ParentSubCommand:
 			result := []any{}
+			s.txMux.RLock()
 
 			for _, node := range nodes[cmd.Target] {
 				switch n := node.(type) {
@@ -245,10 +250,12 @@ func (s *HTMLSender) transaction(c commands.TransactionCommand) {
 				}
 			}
 
+			s.txMux.RUnlock()
 			nodes[cmd.Parent] = result
 
 		case commands.FirstChildSubCommand:
 			result := []any{}
+			s.txMux.RLock()
 
 			for _, node := range nodes[cmd.Target] {
 				switch n := node.(type) {
@@ -266,10 +273,12 @@ func (s *HTMLSender) transaction(c commands.TransactionCommand) {
 				}
 			}
 
+			s.txMux.RUnlock()
 			nodes[cmd.FirstChild] = result
 
 		case commands.LastChildSubCommand:
 			result := []any{}
+			s.txMux.RLock()
 
 			for _, node := range nodes[cmd.Target] {
 				switch n := node.(type) {
@@ -287,10 +296,12 @@ func (s *HTMLSender) transaction(c commands.TransactionCommand) {
 				}
 			}
 
+			s.txMux.RUnlock()
 			nodes[cmd.LastChild] = result
 
 		case commands.NextSiblingSubCommand:
 			result := []any{}
+			s.txMux.RLock()
 
 			for _, node := range nodes[cmd.Target] {
 				switch n := node.(type) {
@@ -308,10 +319,12 @@ func (s *HTMLSender) transaction(c commands.TransactionCommand) {
 				}
 			}
 
+			s.txMux.RUnlock()
 			nodes[cmd.NextSibling] = result
 
 		case commands.PrevSiblingSubCommand:
 			result := []any{}
+			s.txMux.RLock()
 
 			for _, node := range nodes[cmd.Target] {
 				switch n := node.(type) {
@@ -329,10 +342,12 @@ func (s *HTMLSender) transaction(c commands.TransactionCommand) {
 				}
 			}
 
+			s.txMux.RUnlock()
 			nodes[cmd.PrevSibling] = result
 
 		case commands.CloneSubCommand:
 			result := []any{}
+			s.txMux.RLock()
 
 			for _, node := range nodes[cmd.Clone] {
 				switch n := node.(type) {
@@ -359,9 +374,11 @@ func (s *HTMLSender) transaction(c commands.TransactionCommand) {
 				}
 			}
 
+			s.txMux.RUnlock()
 			nodes[cmd.Id] = result
 
 		case commands.TextSubCommand:
+			s.txMux.Lock()
 
 			for _, node := range nodes[cmd.Target] {
 				switch n := node.(type) {
@@ -397,7 +414,11 @@ func (s *HTMLSender) transaction(c commands.TransactionCommand) {
 				}
 			}
 
+			s.txMux.Unlock()
+
 		case commands.HtmlSubCommand:
+
+			s.txMux.Lock()
 
 			for _, node := range nodes[cmd.Target] {
 				switch n := node.(type) {
@@ -426,7 +447,12 @@ func (s *HTMLSender) transaction(c commands.TransactionCommand) {
 				}
 			}
 
+			s.txMux.Unlock()
+
 		case commands.AttrSubCommand:
+
+			s.txMux.Lock()
+
 		loop:
 			for _, node := range nodes[cmd.Target] {
 				switch n := node.(type) {
@@ -447,7 +473,11 @@ func (s *HTMLSender) transaction(c commands.TransactionCommand) {
 				}
 			}
 
+			s.txMux.Unlock()
+
 		case commands.RemoveAttrSubCommand:
+			s.txMux.Lock()
+
 			for _, node := range nodes[cmd.Target] {
 				switch n := node.(type) {
 
@@ -462,7 +492,11 @@ func (s *HTMLSender) transaction(c commands.TransactionCommand) {
 				}
 			}
 
+			s.txMux.Unlock()
+
 		case commands.AddToAttrSubCommand:
+			s.txMux.Lock()
+
 		addToAttrLoop:
 			for _, node := range nodes[cmd.Target] {
 				switch n := node.(type) {
@@ -489,7 +523,11 @@ func (s *HTMLSender) transaction(c commands.TransactionCommand) {
 
 			}
 
+			s.txMux.Unlock()
+
 		case commands.RemoveFromAttrSubCommand:
+			s.txMux.Lock()
+
 		rmFromAttrLoop:
 			for _, node := range nodes[cmd.Target] {
 				switch n := node.(type) {
@@ -511,7 +549,11 @@ func (s *HTMLSender) transaction(c commands.TransactionCommand) {
 				}
 			}
 
+			s.txMux.Unlock()
+
 		case commands.RemoveSubCommand:
+			s.txMux.Lock()
+
 			for _, node := range nodes[cmd.Remove] {
 				switch n := node.(type) {
 
@@ -528,7 +570,11 @@ func (s *HTMLSender) transaction(c commands.TransactionCommand) {
 				}
 			}
 
+			s.txMux.Unlock()
+
 		case commands.InsertNodeBeforeSubCommand:
+			s.txMux.Lock()
+
 			parents := nodes[cmd.Parent]
 		inbloop:
 			for _, node := range parents {
@@ -606,7 +652,11 @@ func (s *HTMLSender) transaction(c commands.TransactionCommand) {
 				}
 			}
 
+			s.txMux.Unlock()
+
 		case commands.InsertBeforeSubCommand:
+			s.txMux.Lock()
+
 			parents := nodes[cmd.Parent]
 		ploop:
 			for _, node := range parents {
@@ -684,7 +734,11 @@ func (s *HTMLSender) transaction(c commands.TransactionCommand) {
 				}
 			}
 
+			s.txMux.Unlock()
+
 		case commands.AppendNodeSubCommand:
+			s.txMux.Lock()
+
 			parents := nodes[cmd.Parent]
 			for _, node := range parents {
 				switch n := node.(type) {
@@ -708,7 +762,11 @@ func (s *HTMLSender) transaction(c commands.TransactionCommand) {
 				}
 			}
 
+			s.txMux.Unlock()
+
 		case commands.AppendSubCommand:
+			s.txMux.Lock()
+
 			parents := nodes[cmd.Parent]
 			for _, node := range parents {
 				switch n := node.(type) {
@@ -731,6 +789,8 @@ func (s *HTMLSender) transaction(c commands.TransactionCommand) {
 
 				}
 			}
+
+			s.txMux.Unlock()
 
 		}
 
