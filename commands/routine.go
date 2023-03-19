@@ -31,6 +31,11 @@ type RunCommand struct {
 	Routine uint64 `json:"routine,omitempty"`
 }
 
+func (r *Routine) Fork(fn func(sr *Routine)) {
+	subroutine := r.Subroutine()
+	go fn(subroutine)
+}
+
 func (r *Routine) Run(url string) {
 	if r.runner != nil {
 		r.runner.Run(r, url)
@@ -45,10 +50,10 @@ type StartRoutineCommand struct {
 	Routine      uint64 `json:"routine,omitempty"`
 }
 
-func (r *Routine) Subroutine() Routine {
+func (r *Routine) Subroutine() *Routine {
 	nextId := r.getNextId()
 	r.sender.SendCommand(StartRoutineCommand{nextId, r.id})
-	return Routine{r.sender, nextId, r.mux, r.nextId, r.runner}
+	return &Routine{r.sender, nextId, r.mux, r.nextId, r.runner}
 }
 
 func (r *Routine) Tx() *Transaction {
