@@ -3,6 +3,7 @@ package gosen
 import (
 	"encoding/json"
 	"net/http"
+	"sync"
 
 	"github.com/manvalls/gosen/buffersender"
 	"github.com/manvalls/gosen/commands"
@@ -30,6 +31,7 @@ func (h *handler) serveHTML(w http.ResponseWriter, r *http.Request) {
 	}
 
 	header := w.Header()
+	wg := &sync.WaitGroup{}
 
 	var p *Page
 
@@ -37,7 +39,7 @@ func (h *handler) serveHTML(w http.ResponseWriter, r *http.Request) {
 		Version:    h.app.Version,
 		Header:     header,
 		StatusCode: http.StatusOK,
-		Routine: commands.NewRoutine(sender, &commands.Runner{
+		Routine: commands.NewRoutine(sender, wg, &commands.Runner{
 			Version: func() string {
 				return p.Version
 			},
@@ -48,6 +50,7 @@ func (h *handler) serveHTML(w http.ResponseWriter, r *http.Request) {
 	}
 
 	h.f(p, r)
+	wg.Wait()
 
 	if h.app.Hydrate {
 		cmdList := []any{}

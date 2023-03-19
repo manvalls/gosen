@@ -7,10 +7,11 @@ import (
 )
 
 type Routine struct {
-	sender CommandSender
-	id     uint64
-	mux    *sync.Mutex
-	nextId *uint64
+	sender    CommandSender
+	waitGroup *sync.WaitGroup
+	id        uint64
+	mux       *sync.Mutex
+	nextId    *uint64
 
 	runner *Runner
 }
@@ -22,8 +23,8 @@ func (r *Routine) getNextId() uint64 {
 	return *r.nextId
 }
 
-func NewRoutine(sender CommandSender, runner *Runner) *Routine {
-	return &Routine{sender, 0, &sync.Mutex{}, new(uint64), runner}
+func NewRoutine(sender CommandSender, wg *sync.WaitGroup, runner *Runner) *Routine {
+	return &Routine{sender, wg, 0, &sync.Mutex{}, new(uint64), runner}
 }
 
 type RunCommand struct {
@@ -31,9 +32,15 @@ type RunCommand struct {
 	Routine uint64 `json:"routine,omitempty"`
 }
 
+func (r *Routine) runFork(sr *Routine, fn func(sr *Routine)) {
+	defer r.waitGroup.Done()
+	fn(sr)
+}
+
 func (r *Routine) Fork(fn func(sr *Routine)) {
-	subroutine := r.Subroutine()
-	go fn(subroutine)
+	r.waitGroup.Add(1)
+	subroutine := r.subroutine()
+	go r.runFork(subroutine, fn)
 }
 
 func (r *Routine) Run(url string) {
@@ -50,10 +57,10 @@ type StartRoutineCommand struct {
 	Routine      uint64 `json:"routine,omitempty"`
 }
 
-func (r *Routine) Subroutine() *Routine {
+func (r *Routine) subroutine() *Routine {
 	nextId := r.getNextId()
 	r.sender.SendCommand(StartRoutineCommand{nextId, r.id})
-	return &Routine{r.sender, nextId, r.mux, r.nextId, r.runner}
+	return &Routine{r.sender, r.waitGroup, nextId, r.mux, r.nextId, r.runner}
 }
 
 func (r *Routine) Tx() *Transaction {
