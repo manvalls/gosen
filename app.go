@@ -9,6 +9,7 @@ import (
 
 type App struct {
 	Hydrate       bool
+	Version       string
 	GetRunHandler func(url string) http.Handler
 	selectorCache *selectorcache.SelectorCache
 }
@@ -38,7 +39,7 @@ func (h *handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if r.Header.Get("gosen-accept") == "json" {
+	if r.URL.Query().Get("format") == "json" {
 		h.serveJSON(w, r)
 		return
 	}
@@ -49,6 +50,7 @@ func (h *handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 func NewApp() *App {
 	return &App{
 		Hydrate:       true,
+		Version:       "",
 		GetRunHandler: defaultGetRunHandler,
 		selectorCache: selectorcache.New(),
 	}

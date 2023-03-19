@@ -31,10 +31,16 @@ func (h *handler) serveHTML(w http.ResponseWriter, r *http.Request) {
 
 	header := w.Header()
 
-	p := &Page{
+	var p *Page
+
+	p = &Page{
+		Version:    h.app.Version,
 		Header:     header,
 		StatusCode: http.StatusOK,
 		Routine: commands.NewRoutine(sender, &commands.Runner{
+			Version: func() string {
+				return p.Version
+			},
 			GetRunHandler: h.app.GetRunHandler,
 			BaseRequest:   r,
 			Header:        header,
@@ -56,11 +62,11 @@ func (h *handler) serveHTML(w http.ResponseWriter, r *http.Request) {
 
 		hydrationData, err := json.Marshal(cmdList)
 		if err == nil {
-			html.PrependScript(`window.__GOSEN_HYDRATION__=` + string(hydrationData))
+			version, _ := json.Marshal(p.Version)
+			html.PrependScript("window.__GOSEN_HYDRATION__=" + string(hydrationData) + ";window.__GOSEN_PAGE_VERSION__=" + string(version) + ";")
 		}
 	}
 
-	header.Add("vary", "gosen-accept")
 	w.WriteHeader(p.StatusCode)
 	html.Render(w)
 }

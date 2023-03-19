@@ -5,9 +5,12 @@ import (
 	"io"
 	"net/http"
 	"strings"
+
+	"github.com/manvalls/gosen/util"
 )
 
 type Runner struct {
+	Version       func() string
 	GetRunHandler func(url string) http.Handler
 	BaseRequest   *http.Request
 	Header        http.Header
@@ -34,7 +37,19 @@ func (w *RunnerWriter) WriteHeader(statusCode int) {
 }
 
 func (r *Runner) Run(routine *Routine, url string) {
-	req, err := http.NewRequestWithContext(r.BaseRequest.Context(), "GET", url, strings.NewReader(""))
+	query := "format=json"
+	version := r.Version()
+	if version != "" {
+		query += "&version=" + version
+	}
+
+	req, err := http.NewRequestWithContext(
+		r.BaseRequest.Context(),
+		"GET",
+		util.AddToQuery(url, query),
+		strings.NewReader(""),
+	)
+
 	if err != nil {
 		return
 	}
@@ -55,7 +70,6 @@ func (r *Runner) Run(routine *Routine, url string) {
 		req.URL.Host = r.BaseRequest.Host
 	}
 
-	req.Header.Set("gosen-accept", "json")
 	req.Header.Set("accept-language", r.BaseRequest.Header.Get("accept-language"))
 	req.Header.Set("user-agent", r.BaseRequest.Header.Get("user-agent"))
 	req.Header.Set("referer", r.BaseRequest.URL.String())
@@ -93,7 +107,7 @@ func (r *Runner) Run(routine *Routine, url string) {
 	}
 
 	body := buff.Bytes()
-	if len(body) > 0 && body[0] == '[' && body[len(body)-1] == ']' {
+	if len(body) > 0 && body[0] == '{' && body[len(body)-1] == '}' {
 		routine.UnmarshalJSON(body)
 	}
 }

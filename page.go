@@ -5,6 +5,7 @@ import (
 )
 
 type Page struct {
+	Version    string
 	Header     http.Header
 	StatusCode int
 	*Routine
