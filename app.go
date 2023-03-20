@@ -9,6 +9,7 @@ import (
 
 type App struct {
 	Hydrate       bool
+	PrefetchRuns  bool
 	Version       string
 	GetRunHandler func(url string) http.Handler
 	selectorCache *selectorcache.SelectorCache
@@ -50,6 +51,7 @@ func (h *handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 func NewApp() *App {
 	return &App{
 		Hydrate:       true,
+		PrefetchRuns:  true,
 		Version:       "",
 		GetRunHandler: defaultGetRunHandler,
 		selectorCache: selectorcache.New(),

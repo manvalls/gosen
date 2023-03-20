@@ -35,18 +35,24 @@ func (h *handler) serveHTML(w http.ResponseWriter, r *http.Request) {
 
 	var p *Page
 
+	runner := &commands.Runner{
+		Version: func() string {
+			return p.Version
+		},
+		GetRunHandler: h.app.GetRunHandler,
+		BaseRequest:   r,
+		Header:        header,
+	}
+
+	if h.app.PrefetchRuns {
+		runner.UrlsToPrefetch = map[string]bool{}
+	}
+
 	p = &Page{
 		Version:    h.app.Version,
 		Header:     header,
 		StatusCode: http.StatusOK,
-		Routine: commands.NewRoutine(sender, wg, &commands.Runner{
-			Version: func() string {
-				return p.Version
-			},
-			GetRunHandler: h.app.GetRunHandler,
-			BaseRequest:   r,
-			Header:        header,
-		}),
+		Routine:    commands.NewRoutine(sender, wg, runner),
 	}
 
 	h.f(p, r)
@@ -67,6 +73,12 @@ func (h *handler) serveHTML(w http.ResponseWriter, r *http.Request) {
 		if err == nil {
 			version, _ := json.Marshal(p.Version)
 			html.PrependScript("window.__GOSEN_HYDRATION__=" + string(hydrationData) + ";window.__GOSEN_PAGE_VERSION__=" + string(version) + ";")
+		}
+	}
+
+	if h.app.PrefetchRuns {
+		for url := range runner.UrlsToPrefetch {
+			html.Prefecth(url)
 		}
 	}
 

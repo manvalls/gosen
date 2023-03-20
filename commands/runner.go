@@ -10,10 +10,11 @@ import (
 )
 
 type Runner struct {
-	Version       func() string
-	GetRunHandler func(url string) http.Handler
-	BaseRequest   *http.Request
-	Header        http.Header
+	Version        func() string
+	GetRunHandler  func(url string) http.Handler
+	BaseRequest    *http.Request
+	Header         http.Header
+	UrlsToPrefetch map[string]bool
 }
 
 type RunnerWriter struct {
@@ -43,10 +44,15 @@ func (r *Runner) Run(routine *Routine, url string) {
 		query += "&version=" + version
 	}
 
+	reqUrl := util.AddToQuery(url, query)
+	if r.UrlsToPrefetch != nil {
+		r.UrlsToPrefetch[reqUrl] = true
+	}
+
 	req, err := http.NewRequestWithContext(
 		r.BaseRequest.Context(),
 		"GET",
-		util.AddToQuery(url, query),
+		reqUrl,
 		strings.NewReader(""),
 	)
 
