@@ -172,7 +172,7 @@ func (t *Transaction) Commit() {
 
 	commands := t.commands
 	t.commands = nil
-	t.sender.SendCommand(TransactionCommand{commands, t.routine, base64.StdEncoding.EncodeToString(t.hash.Sum(nil)), t.once})
+	t.sender.SendCommand(TransactionCommand{commands, t.routine, base64.RawStdEncoding.EncodeToString(t.hash.Sum(nil)), t.once})
 }
 
 // Selectors
