@@ -79,8 +79,14 @@ func (h *handler) serveHTML(w http.ResponseWriter, r *http.Request) {
 
 		hydrationData, err := json.Marshal(cmdList)
 		if err == nil {
-			version, _ := json.Marshal(p.Version)
-			html.PrependScript("window.__GOSEN_HYDRATION__=" + string(hydrationData) + ";window.__GOSEN_PAGE_VERSION__=" + string(version) + ";")
+			script := "window.__GOSEN_HYDRATION__=" + string(hydrationData) + ";"
+
+			if p.Version != "" {
+				version, _ := json.Marshal(p.Version)
+				script += "window.__GOSEN_PAGE_VERSION__=" + string(version) + ";"
+			}
+
+			html.PrependScript(script)
 		}
 	}
 
