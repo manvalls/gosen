@@ -44,8 +44,16 @@ func (h *handler) serveHTML(w http.ResponseWriter, r *http.Request) {
 		Header:        header,
 	}
 
+	var urlsToPrefetch map[string]bool
+
 	if h.app.PrefetchRuns {
-		runner.UrlsToPrefetch = map[string]bool{}
+		urlsToPrefetch = map[string]bool{}
+		mutex := &sync.Mutex{}
+		runner.PrefetchUrl = func(url string) {
+			mutex.Lock()
+			defer mutex.Unlock()
+			urlsToPrefetch[url] = true
+		}
 	}
 
 	p = &Page{
@@ -76,10 +84,8 @@ func (h *handler) serveHTML(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	if h.app.PrefetchRuns {
-		for url := range runner.UrlsToPrefetch {
-			html.Prefecth(url)
-		}
+	for url := range urlsToPrefetch {
+		html.Prefecth(url)
 	}
 
 	w.WriteHeader(p.StatusCode)

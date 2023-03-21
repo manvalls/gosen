@@ -10,11 +10,11 @@ import (
 )
 
 type Runner struct {
-	Version        func() string
-	GetRunHandler  func(url string) http.Handler
-	BaseRequest    *http.Request
-	Header         http.Header
-	UrlsToPrefetch map[string]bool
+	Version       func() string
+	GetRunHandler func(url string) http.Handler
+	PrefetchUrl   func(url string)
+	BaseRequest   *http.Request
+	Header        http.Header
 }
 
 type RunnerWriter struct {
@@ -37,7 +37,7 @@ func (w *RunnerWriter) WriteHeader(statusCode int) {
 	w.statusCode = statusCode
 }
 
-func (r *Runner) Run(routine *Routine, url string) {
+func (r *Runner) Run(routine *Routine, url string, dynamic bool) {
 	query := "format=json"
 	version := r.Version()
 	if version != "" {
@@ -45,8 +45,8 @@ func (r *Runner) Run(routine *Routine, url string) {
 	}
 
 	reqUrl := util.AddToQuery(url, query)
-	if r.UrlsToPrefetch != nil {
-		r.UrlsToPrefetch[reqUrl] = true
+	if !dynamic && r.PrefetchUrl != nil {
+		r.PrefetchUrl(reqUrl)
 	}
 
 	req, err := http.NewRequestWithContext(
@@ -108,7 +108,7 @@ func (r *Runner) Run(routine *Routine, url string) {
 	handler.ServeHTTP(rw, req)
 
 	if rw.statusCode/100 == 3 {
-		r.Run(routine, rw.header.Get("Location"))
+		r.Run(routine, rw.header.Get("Location"), true)
 		return
 	}
 

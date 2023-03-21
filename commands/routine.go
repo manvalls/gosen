@@ -1,6 +1,8 @@
 package commands
 
 import (
+	"fmt"
+	"net/url"
 	"sync"
 
 	"github.com/zeebo/xxh3"
@@ -30,6 +32,7 @@ func NewRoutine(sender CommandSender, wg *sync.WaitGroup, runner *Runner) *Routi
 type RunCommand struct {
 	Run     string `json:"run"`
 	Routine uint64 `json:"routine,omitempty"`
+	Dynamic bool   `json:"dynamic,omitempty"`
 }
 
 func (r *Routine) runFork(sr *Routine, fn func(sr *Routine)) {
@@ -43,13 +46,29 @@ func (r *Routine) Fork(fn func(sr *Routine)) {
 	go r.runFork(subroutine, fn)
 }
 
-func (r *Routine) Run(url string) {
+func (r *Routine) Run(format string, args ...interface{}) {
+	u := format
+	dynamic := len(args) > 0
+
+	if dynamic {
+		escapedArgs := make([]interface{}, len(args))
+		for i, arg := range args {
+			if str, ok := arg.(string); ok {
+				escapedArgs[i] = url.QueryEscape(str)
+			} else {
+				escapedArgs[i] = arg
+			}
+		}
+
+		u = fmt.Sprintf(format, escapedArgs...)
+	}
+
 	if r.runner != nil {
-		r.runner.Run(r, url)
+		r.runner.Run(r, u, dynamic)
 		return
 	}
 
-	r.sender.SendCommand(RunCommand{url, r.id})
+	r.sender.SendCommand(RunCommand{u, r.id, dynamic})
 }
 
 type StartRoutineCommand struct {
