@@ -15,7 +15,7 @@ type ReadTemplate struct {
 	builder ReadCloserFactory
 }
 
-func (t *ReadTemplate) GetFragment(context *html.Node) []*html.Node {
+func (t *ReadTemplate) Fragment(context *html.Node) []*html.Node {
 	readCloser, err := t.builder.ReadCloser()
 	if err != nil {
 		return nil

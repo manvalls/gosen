@@ -15,7 +15,7 @@ type preloadedTemplate struct {
 	hash     []byte
 }
 
-func (t *preloadedTemplate) GetFragment(context *html.Node) []*html.Node {
+func (t *preloadedTemplate) Fragment(context *html.Node) []*html.Node {
 	result := make([]*html.Node, len(t.fragment))
 	for i, node := range t.fragment {
 		result[i] = util.CloneNode(node)
@@ -33,7 +33,7 @@ func (t *preloadedTemplate) WriteHash(w io.Writer) {
 }
 
 func Preload(t Template) Template {
-	fragment := t.GetFragment(nil)
+	fragment := t.Fragment(nil)
 	text, err := t.MarshalText()
 	if err != nil {
 		panic(err)

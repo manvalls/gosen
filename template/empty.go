@@ -8,7 +8,7 @@ import (
 
 type Empty struct{}
 
-func (e Empty) GetFragment(context *html.Node) []*html.Node {
+func (e Empty) Fragment(context *html.Node) []*html.Node {
 	return nil
 }
 

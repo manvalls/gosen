@@ -11,7 +11,7 @@ type WriterToTemplate struct {
 	writerTo io.WriterTo
 }
 
-func (t *WriterToTemplate) GetFragment(context *html.Node) []*html.Node {
+func (t *WriterToTemplate) Fragment(context *html.Node) []*html.Node {
 	reader, writer := io.Pipe()
 	go func() {
 		t.writerTo.WriteTo(writer)

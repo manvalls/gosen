@@ -11,7 +11,7 @@ type StringTemplate struct {
 	text string
 }
 
-func (t *StringTemplate) GetFragment(context *html.Node) []*html.Node {
+func (t *StringTemplate) Fragment(context *html.Node) []*html.Node {
 	nodes, _ := html.ParseFragment(strings.NewReader(t.text), context)
 	return nodes
 }

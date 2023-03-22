@@ -78,7 +78,7 @@ func (h *wrappedHandler) serveHTML(w http.ResponseWriter, r *http.Request) {
 
 	if h.app.Hydrate {
 		cmdList := []any{}
-		for _, cmd := range buffer.GetCommands() {
+		for _, cmd := range buffer.Commands() {
 			switch c := cmd.(type) {
 			case commands.TransactionCommand:
 				cmdList = append(cmdList, TransactionHash{c.Hash, c.Routine})

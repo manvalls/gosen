@@ -17,7 +17,7 @@ func (s *BufferSender) SendCommand(command any) {
 	s.commands = append(s.commands, command)
 }
 
-func (s *BufferSender) GetCommands() []any {
+func (s *BufferSender) Commands() []any {
 	s.mux.Lock()
 	defer s.mux.Unlock()
 	commands := s.commands

@@ -26,8 +26,8 @@ func (t *deferredTemplate) getTemplate() Template {
 	return t.template
 }
 
-func (t *deferredTemplate) GetFragment(context *html.Node) []*html.Node {
-	return t.getTemplate().GetFragment(context)
+func (t *deferredTemplate) Fragment(context *html.Node) []*html.Node {
+	return t.getTemplate().Fragment(context)
 }
 
 func (t *deferredTemplate) MarshalText() (text []byte, err error) {

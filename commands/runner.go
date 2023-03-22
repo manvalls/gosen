@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"io"
 	"net/http"
+	u "net/url"
 	"strings"
 
 	"github.com/manvalls/gosen/util"
@@ -53,7 +54,7 @@ func (r *Runner) Run(routine *Routine, url string, dynamic bool) {
 	query := "format=json"
 	version := r.Version()
 	if version != "" {
-		query += "&version=" + version
+		query += "&version=" + u.QueryEscape(version)
 	}
 
 	reqUrl := util.AddToQuery(url, query)

@@ -210,7 +210,7 @@ func (s *HTMLSender) transaction(c commands.TransactionCommand) {
 
 		case commands.FragmentSubCommand:
 
-			nodes[cmd.Id] = []any{&fragment{template.WithFallback(cmd.Fragment).GetFragment(nil)}}
+			nodes[cmd.Id] = []any{&fragment{template.WithFallback(cmd.Fragment).Fragment(nil)}}
 
 		case commands.ContentSubCommand:
 			result := []any{}
@@ -428,19 +428,19 @@ func (s *HTMLSender) transaction(c commands.TransactionCommand) {
 						n.RemoveChild(c)
 					}
 
-					for _, child := range template.WithFallback(cmd.Html).GetFragment(n) {
+					for _, child := range template.WithFallback(cmd.Html).Fragment(n) {
 						n.AppendChild(child)
 					}
 
 				case *fragment:
-					n.nodes = template.WithFallback(cmd.Html).GetFragment(nil)
+					n.nodes = template.WithFallback(cmd.Html).Fragment(nil)
 
 				case content:
 					for c := n.parent.FirstChild; c != nil; c = c.NextSibling {
 						n.parent.RemoveChild(c)
 					}
 
-					for _, child := range template.WithFallback(cmd.Html).GetFragment(n.parent) {
+					for _, child := range template.WithFallback(cmd.Html).Fragment(n.parent) {
 						n.parent.AppendChild(child)
 					}
 
@@ -663,7 +663,7 @@ func (s *HTMLSender) transaction(c commands.TransactionCommand) {
 				switch n := node.(type) {
 
 				case *html.Node:
-					nodesToInsert := cmd.InsertBefore.GetFragment(n)
+					nodesToInsert := cmd.InsertBefore.Fragment(n)
 
 					for _, r := range nodes[cmd.Ref] {
 						rn, ok := r.(*html.Node)
@@ -683,7 +683,7 @@ func (s *HTMLSender) transaction(c commands.TransactionCommand) {
 					}
 
 				case content:
-					nodesToInsert := cmd.InsertBefore.GetFragment(n.parent)
+					nodesToInsert := cmd.InsertBefore.Fragment(n.parent)
 
 					for _, r := range nodes[cmd.Ref] {
 						rn, ok := r.(*html.Node)
@@ -703,7 +703,7 @@ func (s *HTMLSender) transaction(c commands.TransactionCommand) {
 					}
 
 				case *fragment:
-					nodesToInsert := cmd.InsertBefore.GetFragment(nil)
+					nodesToInsert := cmd.InsertBefore.Fragment(nil)
 
 					for _, r := range nodes[cmd.Ref] {
 						rn, ok := r.(*html.Node)
@@ -772,19 +772,19 @@ func (s *HTMLSender) transaction(c commands.TransactionCommand) {
 				switch n := node.(type) {
 
 				case *html.Node:
-					nodesToInsert := cmd.Append.GetFragment(n)
+					nodesToInsert := cmd.Append.Fragment(n)
 					for _, ni := range nodesToInsert {
 						n.AppendChild(ni)
 					}
 
 				case content:
-					nodesToInsert := cmd.Append.GetFragment(n.parent)
+					nodesToInsert := cmd.Append.Fragment(n.parent)
 					for _, ni := range nodesToInsert {
 						n.parent.AppendChild(ni)
 					}
 
 				case *fragment:
-					nodesToInsert := cmd.Append.GetFragment(nil)
+					nodesToInsert := cmd.Append.Fragment(nil)
 					n.nodes = append(n.nodes, nodesToInsert...)
 
 				}

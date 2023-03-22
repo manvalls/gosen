@@ -10,7 +10,7 @@ type RawTemplate struct {
 	text string
 }
 
-func (t *RawTemplate) GetFragment(context *html.Node) []*html.Node {
+func (t *RawTemplate) Fragment(context *html.Node) []*html.Node {
 	return []*html.Node{
 		{
 			Type: html.RawNode,
