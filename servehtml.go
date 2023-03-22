@@ -104,5 +104,30 @@ func (h *wrappedHandler) serveHTML(w http.ResponseWriter, r *http.Request) {
 		html.Prefecth(url)
 	}
 
+	if h.runCache != nil {
+		needsUpdating := false
+
+		h.runCacheMux.RLock()
+
+		for url := range urlsToPrefetch {
+			if !h.runCache[url] {
+				needsUpdating = true
+				break
+			}
+		}
+
+		h.runCacheMux.RUnlock()
+
+		if needsUpdating {
+			h.runCacheMux.Lock()
+
+			for url := range urlsToPrefetch {
+				h.runCache[url] = true
+			}
+
+			h.runCacheMux.Unlock()
+		}
+	}
+
 	html.Render(w)
 }

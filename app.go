@@ -2,6 +2,7 @@ package gosen
 
 import (
 	"net/http"
+	"sync"
 
 	"github.com/manvalls/gosen/commands"
 	"github.com/manvalls/gosen/selectorcache"
@@ -18,10 +19,11 @@ func (d *DefaultRunHandlerGetter) RunHandler(url string) http.Handler {
 }
 
 type App struct {
-	Hydrate       bool
-	PrefetchRuns  bool
-	Version       string
-	selectorCache *selectorcache.SelectorCache
+	PreloadCachedRuns bool
+	Hydrate           bool
+	PrefetchRuns      bool
+	Version           string
+	selectorCache     *selectorcache.SelectorCache
 	commands.RunHandlerGetter
 }
 
@@ -32,6 +34,9 @@ type Handler interface {
 type wrappedHandler struct {
 	app     *App
 	handler Handler
+
+	runCacheMux *sync.RWMutex
+	runCache    map[string]bool
 }
 
 func (h *wrappedHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -57,16 +62,27 @@ func (h *wrappedHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 func NewApp() *App {
 	return &App{
-		Hydrate:          true,
-		PrefetchRuns:     true,
-		Version:          "",
-		RunHandlerGetter: &DefaultRunHandlerGetter{},
-		selectorCache:    selectorcache.New(),
+		PreloadCachedRuns: true,
+		Hydrate:           true,
+		PrefetchRuns:      true,
+		Version:           "",
+		RunHandlerGetter:  &DefaultRunHandlerGetter{},
+		selectorCache:     selectorcache.New(),
 	}
 }
 
 func (app *App) Wrap(h Handler) http.Handler {
-	return &wrappedHandler{app, h}
+	wh := &wrappedHandler{
+		app:     app,
+		handler: h,
+	}
+
+	if app.PreloadCachedRuns {
+		wh.runCacheMux = &sync.RWMutex{}
+		wh.runCache = map[string]bool{}
+	}
+
+	return wh
 }
 
 type funcHandler struct {
