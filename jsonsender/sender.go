@@ -16,10 +16,7 @@ type JSONSender struct {
 	commands.VersionGetter
 }
 
-func (s *JSONSender) SendCommand(command any) {
-	s.mux.Lock()
-	defer s.mux.Unlock()
-
+func (s *JSONSender) writeVersion() bool {
 	if !s.versionWritten {
 		s.versionWritten = true
 
@@ -30,7 +27,17 @@ func (s *JSONSender) SendCommand(command any) {
 		}
 
 		s.Writter.Write([]byte(`{` + versionString + `"commands":[`))
-	} else {
+		return true
+	}
+
+	return false
+}
+
+func (s *JSONSender) SendCommand(command any) {
+	s.mux.Lock()
+	defer s.mux.Unlock()
+
+	if !s.writeVersion() {
 		s.Writter.Write([]byte(`,`))
 	}
 
@@ -43,5 +50,6 @@ func (s *JSONSender) SendCommand(command any) {
 }
 
 func (s *JSONSender) End() {
+	s.writeVersion()
 	s.Writter.Write([]byte(`]}`))
 }

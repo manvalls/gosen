@@ -19,6 +19,7 @@ func (d *DefaultRunHandlerGetter) RunHandler(url string) http.Handler {
 }
 
 type App struct {
+	SSEKeepAlive      int
 	PreloadCachedRuns bool
 	Hydrate           bool
 	PrefetchRuns      bool
@@ -53,15 +54,24 @@ func (h *wrappedHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if r.URL.Query().Get("format") == "json" {
+		w.Header().Set("Content-Type", "application/json")
 		h.serveJSON(w, r)
 		return
 	}
 
+	if r.URL.Query().Get("format") == "sse" {
+		w.Header().Set("Content-Type", "text/event-stream")
+		h.serveSSE(w, r)
+		return
+	}
+
+	w.Header().Set("Content-Type", "text/html")
 	h.serveHTML(w, r)
 }
 
 func NewApp() *App {
 	return &App{
+		SSEKeepAlive:      15,
 		PreloadCachedRuns: true,
 		Hydrate:           true,
 		PrefetchRuns:      true,
