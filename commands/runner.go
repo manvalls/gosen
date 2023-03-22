@@ -9,12 +9,24 @@ import (
 	"github.com/manvalls/gosen/util"
 )
 
+type RunHandlerGetter interface {
+	RunHandler(url string) http.Handler
+}
+
+type VersionGetter interface {
+	Version() string
+}
+
+type UrlPrefetcher interface {
+	PrefetchUrl(url string)
+}
+
 type Runner struct {
-	Version       func() string
-	GetRunHandler func(url string) http.Handler
-	PrefetchUrl   func(url string)
-	BaseRequest   *http.Request
-	Header        http.Header
+	BaseRequest *http.Request
+	Header      http.Header
+	RunHandlerGetter
+	VersionGetter
+	UrlPrefetcher
 }
 
 type RunnerWriter struct {
@@ -45,7 +57,7 @@ func (r *Runner) Run(routine *Routine, url string, dynamic bool) {
 	}
 
 	reqUrl := util.AddToQuery(url, query)
-	if !dynamic && r.PrefetchUrl != nil {
+	if !dynamic && r.UrlPrefetcher != nil {
 		r.PrefetchUrl(reqUrl)
 	}
 
@@ -86,7 +98,7 @@ func (r *Runner) Run(routine *Routine, url string, dynamic bool) {
 	req.Header.Set("x-forwarded-port", r.BaseRequest.Header.Get("x-forwarded-port"))
 	req.Header.Set("x-real-ip", r.BaseRequest.Header.Get("x-real-ip"))
 
-	handler := r.GetRunHandler(url)
+	handler := r.RunHandler(url)
 	if handler == nil {
 		res, err := http.DefaultClient.Do(req)
 		if err != nil {

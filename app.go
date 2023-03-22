@@ -7,15 +7,9 @@ import (
 	"github.com/manvalls/gosen/selectorcache"
 )
 
-type App struct {
-	Hydrate       bool
-	PrefetchRuns  bool
-	Version       string
-	GetRunHandler func(url string) http.Handler
-	selectorCache *selectorcache.SelectorCache
-}
+type DefaultRunHandlerGetter struct{}
 
-func defaultGetRunHandler(url string) http.Handler {
+func (d *DefaultRunHandlerGetter) RunHandler(url string) http.Handler {
 	if url[0] == '/' {
 		return http.DefaultServeMux
 	}
@@ -23,15 +17,27 @@ func defaultGetRunHandler(url string) http.Handler {
 	return nil
 }
 
-type handler struct {
-	app *App
-	f   func(p *Page, r *http.Request)
+type App struct {
+	Hydrate       bool
+	PrefetchRuns  bool
+	Version       string
+	selectorCache *selectorcache.SelectorCache
+	commands.RunHandlerGetter
 }
 
-func (h *handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+type Handler interface {
+	ServeGosen(p *Page, r *http.Request)
+}
+
+type wrappedHandler struct {
+	app     *App
+	handler Handler
+}
+
+func (h *wrappedHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if rw, ok := w.(*commands.RunnerWriter); ok {
 
-		h.f(&Page{
+		h.handler.ServeGosen(&Page{
 			Version: h.app.Version,
 			Header:  rw.Header(),
 			Routine: rw.Routine,
@@ -51,15 +57,26 @@ func (h *handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 func NewApp() *App {
 	return &App{
-		Hydrate:       true,
-		PrefetchRuns:  true,
-		Version:       "",
-		GetRunHandler: defaultGetRunHandler,
-		selectorCache: selectorcache.New(),
+		Hydrate:          true,
+		PrefetchRuns:     true,
+		Version:          "",
+		RunHandlerGetter: &DefaultRunHandlerGetter{},
+		selectorCache:    selectorcache.New(),
 	}
 }
 
-func (app *App) Handler(f func(p *Page, r *http.Request)) http.Handler {
-	h := &handler{app, f}
-	return h
+func (app *App) Wrap(h Handler) http.Handler {
+	return &wrappedHandler{app, h}
+}
+
+type funcHandler struct {
+	f func(p *Page, r *http.Request)
+}
+
+func (h *funcHandler) ServeGosen(p *Page, r *http.Request) {
+	h.f(p, r)
+}
+
+func (app *App) WrapFunc(f func(p *Page, r *http.Request)) http.Handler {
+	return app.Wrap(&funcHandler{f})
 }

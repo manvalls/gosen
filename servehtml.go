@@ -16,7 +16,26 @@ type TransactionHash struct {
 	Routine     uint64 `json:"routine,omitempty"`
 }
 
-func (h *handler) serveHTML(w http.ResponseWriter, r *http.Request) {
+type versionGetter struct {
+	page *Page
+}
+
+func (v *versionGetter) Version() string {
+	return v.page.Version
+}
+
+type urlPrefetcher struct {
+	urlsToPrefetch map[string]bool
+	mutex          *sync.Mutex
+}
+
+func (u *urlPrefetcher) PrefetchUrl(url string) {
+	u.mutex.Lock()
+	defer u.mutex.Unlock()
+	u.urlsToPrefetch[url] = true
+}
+
+func (h *wrappedHandler) serveHTML(w http.ResponseWriter, r *http.Request) {
 	var html *htmlsender.HTMLSender
 	var buffer *buffersender.BufferSender
 	var sender commands.CommandSender
@@ -33,37 +52,28 @@ func (h *handler) serveHTML(w http.ResponseWriter, r *http.Request) {
 	header := w.Header()
 	wg := &sync.WaitGroup{}
 
-	var p *Page
+	p := &Page{
+		Version: h.app.Version,
+		Header:  header,
+		writter: w,
+	}
 
 	runner := &commands.Runner{
-		Version: func() string {
-			return p.Version
-		},
-		GetRunHandler: h.app.GetRunHandler,
-		BaseRequest:   r,
-		Header:        header,
+		VersionGetter:    &versionGetter{p},
+		RunHandlerGetter: h.app.RunHandlerGetter,
+		BaseRequest:      r,
+		Header:           header,
 	}
 
 	var urlsToPrefetch map[string]bool
 
 	if h.app.PrefetchRuns {
 		urlsToPrefetch = map[string]bool{}
-		mutex := &sync.Mutex{}
-		runner.PrefetchUrl = func(url string) {
-			mutex.Lock()
-			defer mutex.Unlock()
-			urlsToPrefetch[url] = true
-		}
+		runner.UrlPrefetcher = &urlPrefetcher{urlsToPrefetch, &sync.Mutex{}}
 	}
 
-	p = &Page{
-		Version: h.app.Version,
-		Header:  header,
-		Routine: commands.NewRoutine(sender, wg, runner),
-		writter: w,
-	}
-
-	h.f(p, r)
+	p.Routine = commands.NewRoutine(sender, wg, runner)
+	h.handler.ServeGosen(p, r)
 	wg.Wait()
 
 	if h.app.Hydrate {

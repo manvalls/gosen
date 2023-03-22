@@ -14,7 +14,7 @@ type JSONResponse struct {
 	Version  string `json:"version,omitempty"`
 }
 
-func (h *handler) serveJSON(w http.ResponseWriter, r *http.Request) {
+func (h *wrappedHandler) serveJSON(w http.ResponseWriter, r *http.Request) {
 	buffer := buffersender.NewBufferSender()
 	header := w.Header()
 	wg := &sync.WaitGroup{}
@@ -26,7 +26,7 @@ func (h *handler) serveJSON(w http.ResponseWriter, r *http.Request) {
 		writter: w,
 	}
 
-	h.f(p, r)
+	h.handler.ServeGosen(p, r)
 	wg.Wait()
 
 	data, _ := json.Marshal(JSONResponse{

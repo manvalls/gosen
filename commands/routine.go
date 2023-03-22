@@ -35,15 +35,31 @@ type RunCommand struct {
 	Dynamic bool   `json:"dynamic,omitempty"`
 }
 
-func (r *Routine) runFork(sr *Routine, fn func(sr *Routine)) {
+func (r *Routine) runFork(sr *Routine, thread Thread) {
 	defer r.waitGroup.Done()
-	fn(sr)
+	thread.Run(sr)
 }
 
-func (r *Routine) Fork(fn func(sr *Routine)) {
+type Thread interface {
+	Run(subroutine *Routine)
+}
+
+func (r *Routine) Fork(thread Thread) {
 	r.waitGroup.Add(1)
 	subroutine := r.subroutine()
-	go r.runFork(subroutine, fn)
+	go r.runFork(subroutine, thread)
+}
+
+type funcThread struct {
+	f func(subroutine *Routine)
+}
+
+func (f *funcThread) Run(subroutine *Routine) {
+	f.f(subroutine)
+}
+
+func (r *Routine) ForkFunc(f func(subroutine *Routine)) {
+	r.Fork(&funcThread{f})
 }
 
 func (r *Routine) Run(format string, args ...interface{}) {
