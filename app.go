@@ -32,9 +32,10 @@ func (h *handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if rw, ok := w.(*commands.RunnerWriter); ok {
 
 		h.f(&Page{
-			Header:     rw.Header(),
-			StatusCode: http.StatusOK,
-			Routine:    rw.Routine,
+			Version: h.app.Version,
+			Header:  rw.Header(),
+			Routine: rw.Routine,
+			writter: w,
 		}, r)
 
 		return

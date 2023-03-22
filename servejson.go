@@ -20,16 +20,15 @@ func (h *handler) serveJSON(w http.ResponseWriter, r *http.Request) {
 	wg := &sync.WaitGroup{}
 
 	p := &Page{
-		Version:    h.app.Version,
-		Header:     header,
-		StatusCode: http.StatusOK,
-		Routine:    commands.NewRoutine(buffer, wg, nil),
+		Version: h.app.Version,
+		Header:  header,
+		Routine: commands.NewRoutine(buffer, wg, nil),
+		writter: w,
 	}
 
 	h.f(p, r)
 	wg.Wait()
 
-	w.WriteHeader(p.StatusCode)
 	data, _ := json.Marshal(JSONResponse{
 		Commands: buffer.GetCommands(),
 		Version:  p.Version,

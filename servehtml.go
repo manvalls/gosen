@@ -57,10 +57,10 @@ func (h *handler) serveHTML(w http.ResponseWriter, r *http.Request) {
 	}
 
 	p = &Page{
-		Version:    h.app.Version,
-		Header:     header,
-		StatusCode: http.StatusOK,
-		Routine:    commands.NewRoutine(sender, wg, runner),
+		Version: h.app.Version,
+		Header:  header,
+		Routine: commands.NewRoutine(sender, wg, runner),
+		writter: w,
 	}
 
 	h.f(p, r)
@@ -94,6 +94,5 @@ func (h *handler) serveHTML(w http.ResponseWriter, r *http.Request) {
 		html.Prefecth(url)
 	}
 
-	w.WriteHeader(p.StatusCode)
 	html.Render(w)
 }
