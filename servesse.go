@@ -12,13 +12,9 @@ import (
 func (h *wrappedHandler) serveSSE(w http.ResponseWriter, r *http.Request) {
 	h.sendEarlyHints(w)
 
-	flusher, ok := w.(http.Flusher)
-	if !ok {
-		http.Error(w, "Streaming unsupported!", http.StatusInternalServerError)
-		return
-	}
+	flusher, _ := w.(http.Flusher)
 
-	if h.app.SSEKeepAlive > 0 {
+	if flusher != nil && h.app.SSEKeepAlive > 0 {
 		go func() {
 			for {
 				select {
@@ -38,7 +34,10 @@ func (h *wrappedHandler) serveSSE(w http.ResponseWriter, r *http.Request) {
 		writter: w,
 	}
 
+	mux := &sync.Mutex{}
+
 	sender := &ssesender.SSESender{
+		Mux:           mux,
 		Writter:       w,
 		Flusher:       flusher,
 		VersionGetter: &versionGetter{p},
@@ -47,6 +46,7 @@ func (h *wrappedHandler) serveSSE(w http.ResponseWriter, r *http.Request) {
 
 	wg := &sync.WaitGroup{}
 	p.Routine = commands.NewRoutine(sender, wg, nil)
+	p.sseMux = mux
 
 	h.handler.ServeGosen(p, r)
 	wg.Wait()
