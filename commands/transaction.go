@@ -21,7 +21,7 @@ type Transaction struct {
 }
 
 type TransactionCommand struct {
-	Transaction []any  `json:"tx"`
+	Transaction []any  `json:"tx,omitempty"`
 	Routine     uint64 `json:"routine,omitempty"`
 	Hash        string `json:"hash,omitempty"`
 	Once        bool   `json:"once,omitempty"`

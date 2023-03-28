@@ -11,11 +11,6 @@ import (
 	"github.com/manvalls/gosen/multisender"
 )
 
-type TransactionHash struct {
-	Transaction string `json:"tx"`
-	Routine     uint64 `json:"routine,omitempty"`
-}
-
 type versionGetter struct {
 	page *Page
 }
@@ -81,7 +76,11 @@ func (h *wrappedHandler) serveHTML(w http.ResponseWriter, r *http.Request) {
 		for _, cmd := range buffer.Commands() {
 			switch c := cmd.(type) {
 			case commands.TransactionCommand:
-				cmdList = append(cmdList, TransactionHash{c.Hash, c.Routine})
+				cmdList = append(cmdList, commands.TransactionCommand{
+					Hash:    c.Hash,
+					Routine: c.Routine,
+					Once:    c.Once,
+				})
 			default:
 				cmdList = append(cmdList, cmd)
 			}
