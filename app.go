@@ -26,6 +26,7 @@ type App struct {
 	Version           string
 	selectorCache     *selectorcache.SelectorCache
 	commands.RunHandlerGetter
+	commands.VersionGetter
 }
 
 type Handler interface {
@@ -44,7 +45,6 @@ func (h *wrappedHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if rw, ok := w.(*commands.RunnerWriter); ok {
 
 		h.handler.ServeGosen(&Page{
-			Version: h.app.Version,
 			Header:  rw.Header(),
 			Routine: rw.Routine,
 			writter: w,
@@ -69,8 +69,16 @@ func (h *wrappedHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	h.serveHTML(w, r)
 }
 
+type versionGetter struct {
+	app *App
+}
+
+func (v *versionGetter) Version() string {
+	return v.app.Version
+}
+
 func NewApp() *App {
-	return &App{
+	app := &App{
 		SSEKeepAlive:      15,
 		PreloadCachedRuns: true,
 		Hydrate:           true,
@@ -79,6 +87,9 @@ func NewApp() *App {
 		RunHandlerGetter:  &DefaultRunHandlerGetter{},
 		selectorCache:     selectorcache.New(),
 	}
+
+	app.VersionGetter = &versionGetter{app}
+	return app
 }
 
 func (app *App) Wrap(h Handler) http.Handler {

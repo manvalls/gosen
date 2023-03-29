@@ -29,7 +29,6 @@ func (h *wrappedHandler) serveSSE(w http.ResponseWriter, r *http.Request) {
 	}
 
 	p := &Page{
-		Version: h.app.Version,
 		Header:  w.Header(),
 		writter: w,
 	}
@@ -40,7 +39,7 @@ func (h *wrappedHandler) serveSSE(w http.ResponseWriter, r *http.Request) {
 		Mux:           mux,
 		Writter:       w,
 		Flusher:       flusher,
-		VersionGetter: &versionGetter{p},
+		VersionGetter: h.app.VersionGetter,
 		RunList:       []string{},
 	}
 
@@ -51,5 +50,5 @@ func (h *wrappedHandler) serveSSE(w http.ResponseWriter, r *http.Request) {
 	h.handler.ServeGosen(p, r)
 	wg.Wait()
 
-	h.cacheRuns(p.Version, sender.RunList)
+	h.cacheRuns(h.app.VersionGetter.Version(), sender.RunList)
 }

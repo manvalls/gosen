@@ -12,14 +12,13 @@ func (h *wrappedHandler) serveJSON(w http.ResponseWriter, r *http.Request) {
 	h.sendEarlyHints(w)
 
 	p := &Page{
-		Version: h.app.Version,
 		Header:  w.Header(),
 		writter: w,
 	}
 
 	sender := &jsonsender.JSONSender{
 		Writter:       w,
-		VersionGetter: &versionGetter{p},
+		VersionGetter: h.app.VersionGetter,
 		RunList:       []string{},
 	}
 
@@ -30,5 +29,5 @@ func (h *wrappedHandler) serveJSON(w http.ResponseWriter, r *http.Request) {
 	wg.Wait()
 	sender.End()
 
-	h.cacheRuns(p.Version, sender.RunList)
+	h.cacheRuns(h.app.VersionGetter.Version(), sender.RunList)
 }

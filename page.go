@@ -8,8 +8,7 @@ import (
 )
 
 type Page struct {
-	Version string
-	Header  http.Header
+	Header http.Header
 	*Routine
 	writter http.ResponseWriter
 	sseMux  *sync.Mutex

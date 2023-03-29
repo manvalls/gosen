@@ -11,14 +11,6 @@ import (
 	"github.com/manvalls/gosen/multisender"
 )
 
-type versionGetter struct {
-	page *Page
-}
-
-func (v *versionGetter) Version() string {
-	return v.page.Version
-}
-
 type urlPrefetcher struct {
 	urlsToPrefetch map[string]bool
 	mutex          *sync.Mutex
@@ -48,13 +40,12 @@ func (h *wrappedHandler) serveHTML(w http.ResponseWriter, r *http.Request) {
 	wg := &sync.WaitGroup{}
 
 	p := &Page{
-		Version: h.app.Version,
 		Header:  header,
 		writter: w,
 	}
 
 	runner := &commands.Runner{
-		VersionGetter:    &versionGetter{p},
+		VersionGetter:    h.app.VersionGetter,
 		RunHandlerGetter: h.app.RunHandlerGetter,
 		BaseRequest:      r,
 		Header:           header,
@@ -89,10 +80,10 @@ func (h *wrappedHandler) serveHTML(w http.ResponseWriter, r *http.Request) {
 		hydrationData, err := json.Marshal(cmdList)
 		if err == nil {
 			script := "window.__GOSEN_HYDRATION__=" + string(hydrationData) + ";"
-
-			if p.Version != "" {
-				version, _ := json.Marshal(p.Version)
-				script += "window.__GOSEN_PAGE_VERSION__=" + string(version) + ";"
+			version := h.app.VersionGetter.Version()
+			if version != "" {
+				v, _ := json.Marshal(version)
+				script += "window.__GOSEN_PAGE_VERSION__=" + string(v) + ";"
 			}
 
 			html.PrependScript(script)
