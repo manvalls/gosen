@@ -15,8 +15,7 @@ func (h *wrappedHandler) serveJSON(w http.ResponseWriter, r *http.Request) {
 	}
 
 	sender := &jsonsender.JSONSender{
-		Writter:       w,
-		VersionGetter: h.app.VersionGetter,
+		Writter: w,
 	}
 
 	wg := &sync.WaitGroup{}

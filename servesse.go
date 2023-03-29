@@ -34,10 +34,9 @@ func (h *wrappedHandler) serveSSE(w http.ResponseWriter, r *http.Request) {
 	mux := &sync.Mutex{}
 
 	sender := &ssesender.SSESender{
-		Mux:           mux,
-		Writter:       w,
-		Flusher:       flusher,
-		VersionGetter: h.app.VersionGetter,
+		Mux:     mux,
+		Writter: w,
+		Flusher: flusher,
 	}
 
 	wg := &sync.WaitGroup{}

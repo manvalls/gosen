@@ -272,7 +272,7 @@ func (r *Routine) UnmarshalJSON(data []byte) error {
 		return err
 	}
 
-	arr := v.GetArray("commands")
+	arr := v.GetArray()
 	for _, val := range arr {
 		if val.Exists("hash") || val.Exists("tx") {
 			transaction := []any{}

@@ -4,28 +4,18 @@ import (
 	"encoding/json"
 	"io"
 	"sync"
-
-	"github.com/manvalls/gosen/commands"
 )
 
 type JSONSender struct {
 	mux            sync.Mutex
-	versionWritten bool
+	prefaceWritten bool
 	Writter        io.Writer
-	commands.VersionGetter
 }
 
-func (s *JSONSender) writeVersion() bool {
-	if !s.versionWritten {
-		s.versionWritten = true
-
-		versionString := ""
-		if s.Version() != "" {
-			v, _ := json.Marshal(s.Version())
-			versionString = `"version":` + string(v) + `,`
-		}
-
-		s.Writter.Write([]byte(`{` + versionString + `"commands":[`))
+func (s *JSONSender) writePreface() bool {
+	if !s.prefaceWritten {
+		s.prefaceWritten = true
+		s.Writter.Write([]byte{'['})
 		return true
 	}
 
@@ -36,7 +26,7 @@ func (s *JSONSender) SendCommand(command any) {
 	s.mux.Lock()
 	defer s.mux.Unlock()
 
-	if !s.writeVersion() {
+	if !s.writePreface() {
 		s.Writter.Write([]byte(`,`))
 	}
 
@@ -45,6 +35,6 @@ func (s *JSONSender) SendCommand(command any) {
 }
 
 func (s *JSONSender) End() {
-	s.writeVersion()
-	s.Writter.Write([]byte(`]}`))
+	s.writePreface()
+	s.Writter.Write([]byte{']'})
 }

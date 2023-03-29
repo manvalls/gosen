@@ -2,6 +2,7 @@ package gosen
 
 import (
 	"net/http"
+	"strings"
 
 	"github.com/manvalls/gosen/commands"
 	"github.com/manvalls/gosen/selectorcache"
@@ -17,6 +18,10 @@ func (d *DefaultRunHandlerGetter) RunHandler(url string) http.Handler {
 	return nil
 }
 
+type VersionGetter interface {
+	Version() string
+}
+
 type App struct {
 	SSEKeepAlive  int
 	Hydrate       bool
@@ -24,7 +29,7 @@ type App struct {
 	Version       string
 	selectorCache *selectorcache.SelectorCache
 	commands.RunHandlerGetter
-	commands.VersionGetter
+	VersionGetter
 }
 
 type Handler interface {
@@ -48,6 +53,15 @@ func (h *wrappedHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	serverVersion := h.app.VersionGetter.Version()
+	clientVersion := r.URL.Query().Get("version")
+	if serverVersion != "" && clientVersion != "" && serverVersion != clientVersion {
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte(`{"error":"VERSION_MISMATCH","serverVersion":"` + strings.ReplaceAll(serverVersion, `"`, "") + `","clientVersion":"` + strings.ReplaceAll(clientVersion, `"`, "") + `"}`))
+		return
+	}
+
 	if r.URL.Query().Get("format") == "json" {
 		w.Header().Set("Content-Type", "application/json")
 		h.serveJSON(w, r)
@@ -61,7 +75,7 @@ func (h *wrappedHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "text/html")
-	h.serveHTML(w, r)
+	h.serveHTML(w, r, serverVersion)
 }
 
 type versionGetter struct {

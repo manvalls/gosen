@@ -22,7 +22,7 @@ func (u *urlPrefetcher) PrefetchUrl(url string) {
 	u.urlsToPrefetch[url] = true
 }
 
-func (h *wrappedHandler) serveHTML(w http.ResponseWriter, r *http.Request) {
+func (h *wrappedHandler) serveHTML(w http.ResponseWriter, r *http.Request, version string) {
 	var html *htmlsender.HTMLSender
 	var buffer *buffersender.BufferSender
 	var sender commands.CommandSender
@@ -45,7 +45,6 @@ func (h *wrappedHandler) serveHTML(w http.ResponseWriter, r *http.Request) {
 	}
 
 	runner := &commands.Runner{
-		VersionGetter:    h.app.VersionGetter,
 		RunHandlerGetter: h.app.RunHandlerGetter,
 		BaseRequest:      r,
 		Header:           header,
@@ -80,7 +79,6 @@ func (h *wrappedHandler) serveHTML(w http.ResponseWriter, r *http.Request) {
 		hydrationData, err := json.Marshal(cmdList)
 		if err == nil {
 			script := "window.__GOSEN_HYDRATION__=" + string(hydrationData) + ";"
-			version := h.app.VersionGetter.Version()
 			if version != "" {
 				v, _ := json.Marshal(version)
 				script += "window.__GOSEN_PAGE_VERSION__=" + string(v) + ";"

@@ -11,7 +11,6 @@ import (
 type Node = commands.Node
 type Transaction = commands.Transaction
 type Routine = commands.Routine
-type VersionGetter = commands.VersionGetter
 
 type Template = template.Template
 type TemplateFactory = template.TemplateFactory

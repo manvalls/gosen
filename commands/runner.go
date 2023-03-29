@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"io"
 	"net/http"
-	u "net/url"
 	"strings"
 
 	"github.com/manvalls/gosen/util"
@@ -12,10 +11,6 @@ import (
 
 type RunHandlerGetter interface {
 	RunHandler(url string) http.Handler
-}
-
-type VersionGetter interface {
-	Version() string
 }
 
 type UrlPrefetcher interface {
@@ -26,7 +21,6 @@ type Runner struct {
 	BaseRequest *http.Request
 	Header      http.Header
 	RunHandlerGetter
-	VersionGetter
 	UrlPrefetcher
 }
 
@@ -51,13 +45,7 @@ func (w *RunnerWriter) WriteHeader(statusCode int) {
 }
 
 func (r *Runner) Run(routine *Routine, url string, dynamic bool) {
-	query := "format=json"
-	version := r.Version()
-	if version != "" {
-		query += "&version=" + u.QueryEscape(version)
-	}
-
-	reqUrl := util.AddToQuery(url, query)
+	reqUrl := util.AddToQuery(url, "format=json")
 	if !dynamic && r.UrlPrefetcher != nil {
 		r.PrefetchUrl(reqUrl)
 	}
@@ -89,6 +77,7 @@ func (r *Runner) Run(routine *Routine, url string, dynamic bool) {
 		req.URL.Host = r.BaseRequest.Host
 	}
 
+	req.Header.Set("cache-control", "no-cache")
 	req.Header.Set("accept-language", r.BaseRequest.Header.Get("accept-language"))
 	req.Header.Set("user-agent", r.BaseRequest.Header.Get("user-agent"))
 	req.Header.Set("referer", r.BaseRequest.URL.String())
@@ -126,7 +115,7 @@ func (r *Runner) Run(routine *Routine, url string, dynamic bool) {
 	}
 
 	body := buff.Bytes()
-	if len(body) > 0 && body[0] == '{' && body[len(body)-1] == '}' {
+	if len(body) > 1 && body[0] == '[' && body[len(body)-1] == ']' {
 		routine.UnmarshalJSON(body)
 	}
 }
