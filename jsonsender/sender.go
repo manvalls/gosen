@@ -11,7 +11,6 @@ import (
 type JSONSender struct {
 	mux            sync.Mutex
 	versionWritten bool
-	RunList        []string
 	Writter        io.Writer
 	commands.VersionGetter
 }
@@ -39,10 +38,6 @@ func (s *JSONSender) SendCommand(command any) {
 
 	if !s.writeVersion() {
 		s.Writter.Write([]byte(`,`))
-	}
-
-	if command, ok := command.(commands.RunCommand); ok {
-		s.RunList = append(s.RunList, command.Run)
 	}
 
 	result, _ := json.Marshal(command)

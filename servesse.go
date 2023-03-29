@@ -10,8 +10,6 @@ import (
 )
 
 func (h *wrappedHandler) serveSSE(w http.ResponseWriter, r *http.Request) {
-	h.sendEarlyHints(w)
-
 	flusher, _ := w.(http.Flusher)
 
 	if flusher != nil && h.app.SSEKeepAlive > 0 {
@@ -40,7 +38,6 @@ func (h *wrappedHandler) serveSSE(w http.ResponseWriter, r *http.Request) {
 		Writter:       w,
 		Flusher:       flusher,
 		VersionGetter: h.app.VersionGetter,
-		RunList:       []string{},
 	}
 
 	wg := &sync.WaitGroup{}
@@ -49,6 +46,4 @@ func (h *wrappedHandler) serveSSE(w http.ResponseWriter, r *http.Request) {
 
 	h.handler.ServeGosen(p, r)
 	wg.Wait()
-
-	h.cacheRuns(h.app.VersionGetter.Version(), sender.RunList)
 }
