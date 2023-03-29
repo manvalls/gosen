@@ -25,7 +25,6 @@ type VersionGetter interface {
 type App struct {
 	SSEKeepAlive  int
 	Hydrate       bool
-	PrefetchRuns  bool
 	Version       string
 	selectorCache *selectorcache.SelectorCache
 	commands.RunHandlerGetter
@@ -90,7 +89,6 @@ func NewApp() *App {
 	app := &App{
 		SSEKeepAlive:     15,
 		Hydrate:          true,
-		PrefetchRuns:     true,
 		Version:          "",
 		RunHandlerGetter: &DefaultRunHandlerGetter{},
 		selectorCache:    selectorcache.New(),

@@ -11,17 +11,6 @@ import (
 	"github.com/manvalls/gosen/multisender"
 )
 
-type urlPrefetcher struct {
-	urlsToPrefetch map[string]bool
-	mutex          *sync.Mutex
-}
-
-func (u *urlPrefetcher) PrefetchUrl(url string) {
-	u.mutex.Lock()
-	defer u.mutex.Unlock()
-	u.urlsToPrefetch[url] = true
-}
-
 func (h *wrappedHandler) serveHTML(w http.ResponseWriter, r *http.Request, version string) {
 	var html *htmlsender.HTMLSender
 	var buffer *buffersender.BufferSender
@@ -48,13 +37,6 @@ func (h *wrappedHandler) serveHTML(w http.ResponseWriter, r *http.Request, versi
 		RunHandlerGetter: h.app.RunHandlerGetter,
 		BaseRequest:      r,
 		Header:           header,
-	}
-
-	var urlsToPrefetch map[string]bool
-
-	if h.app.PrefetchRuns {
-		urlsToPrefetch = map[string]bool{}
-		runner.UrlPrefetcher = &urlPrefetcher{urlsToPrefetch, &sync.Mutex{}}
 	}
 
 	p.Routine = commands.NewRoutine(sender, wg, runner)
@@ -86,10 +68,6 @@ func (h *wrappedHandler) serveHTML(w http.ResponseWriter, r *http.Request, versi
 
 			html.PrependScript(script)
 		}
-	}
-
-	for url := range urlsToPrefetch {
-		html.Prefecth(url)
 	}
 
 	html.Render(w)

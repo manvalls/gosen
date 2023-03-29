@@ -100,18 +100,6 @@ func (s *HTMLSender) PrependScript(hydrationData string) {
 	s.head.InsertBefore(script, s.head.FirstChild)
 }
 
-func (s *HTMLSender) Prefecth(link string) {
-	s.head.InsertBefore(&html.Node{
-		Type:     html.ElementNode,
-		DataAtom: atom.Link,
-		Data:     "link",
-		Attr: []html.Attribute{
-			{Key: "rel", Val: "prefetch"},
-			{Key: "href", Val: link},
-		},
-	}, s.head.FirstChild)
-}
-
 func (s *HTMLSender) Render(w io.Writer) error {
 	return html.Render(w, s.document)
 }

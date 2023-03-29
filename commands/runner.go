@@ -13,15 +13,10 @@ type RunHandlerGetter interface {
 	RunHandler(url string) http.Handler
 }
 
-type UrlPrefetcher interface {
-	PrefetchUrl(url string)
-}
-
 type Runner struct {
 	BaseRequest *http.Request
 	Header      http.Header
 	RunHandlerGetter
-	UrlPrefetcher
 }
 
 type RunnerWriter struct {
@@ -44,11 +39,8 @@ func (w *RunnerWriter) WriteHeader(statusCode int) {
 	w.statusCode = statusCode
 }
 
-func (r *Runner) Run(routine *Routine, url string, dynamic bool) {
+func (r *Runner) Run(routine *Routine, url string) {
 	reqUrl := util.AddToQuery(url, "format=json")
-	if !dynamic && r.UrlPrefetcher != nil {
-		r.PrefetchUrl(reqUrl)
-	}
 
 	req, err := http.NewRequestWithContext(
 		r.BaseRequest.Context(),
@@ -110,7 +102,7 @@ func (r *Runner) Run(routine *Routine, url string, dynamic bool) {
 	handler.ServeHTTP(rw, req)
 
 	if rw.statusCode/100 == 3 {
-		r.Run(routine, rw.header.Get("Location"), true)
+		r.Run(routine, rw.header.Get("Location"))
 		return
 	}
 

@@ -32,7 +32,6 @@ func NewRoutine(sender CommandSender, wg *sync.WaitGroup, runner *Runner) *Routi
 type RunCommand struct {
 	Run     string `json:"run"`
 	Routine uint64 `json:"routine,omitempty"`
-	Dynamic bool   `json:"dynamic,omitempty"`
 }
 
 func (r *Routine) runFork(sr *Routine, thread Thread) {
@@ -64,9 +63,8 @@ func (r *Routine) ForkFunc(f func(subroutine *Routine)) {
 
 func (r *Routine) Run(format string, args ...interface{}) {
 	u := format
-	dynamic := len(args) > 0
 
-	if dynamic {
+	if len(args) > 0 {
 		escapedArgs := make([]interface{}, len(args))
 		for i, arg := range args {
 			if str, ok := arg.(string); ok {
@@ -80,11 +78,11 @@ func (r *Routine) Run(format string, args ...interface{}) {
 	}
 
 	if r.runner != nil {
-		r.runner.Run(r, u, dynamic)
+		r.runner.Run(r, u)
 		return
 	}
 
-	r.sender.SendCommand(RunCommand{u, r.id, dynamic})
+	r.sender.SendCommand(RunCommand{u, r.id})
 }
 
 type StartRoutineCommand struct {
