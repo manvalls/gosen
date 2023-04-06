@@ -60,7 +60,7 @@ func (h *wrappedHandler) serveHTML(w http.ResponseWriter, r *http.Request, versi
 
 		hydrationData, err := json.Marshal(cmdList)
 		if err == nil {
-			script := "window.__GOSEN_HYDRATION__=" + string(hydrationData) + ";"
+			script := "window.__GOSEN_STATE__=" + string(hydrationData) + ";"
 			if version != "" {
 				v, _ := json.Marshal(version)
 				script += "window.__GOSEN_PAGE_VERSION__=" + string(v) + ";"
