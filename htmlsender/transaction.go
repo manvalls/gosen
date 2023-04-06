@@ -261,13 +261,19 @@ func (s *HTMLSender) transaction(c commands.TransactionCommand) {
 				switch n := node.(type) {
 
 				case *html.Node:
-					if n.FirstChild != nil {
-						result = append(result, n.FirstChild)
+					for c := n.FirstChild; c != nil; c = c.NextSibling {
+						if c.Type == html.ElementNode {
+							result = append(result, c)
+							break
+						}
 					}
 
 				case content:
-					if n.parent.FirstChild != nil {
-						result = append(result, n.parent.FirstChild)
+					for c := n.parent.FirstChild; c != nil; c = c.NextSibling {
+						if c.Type == html.ElementNode {
+							result = append(result, c)
+							break
+						}
 					}
 
 				}
@@ -284,13 +290,19 @@ func (s *HTMLSender) transaction(c commands.TransactionCommand) {
 				switch n := node.(type) {
 
 				case *html.Node:
-					if n.LastChild != nil {
-						result = append(result, n.LastChild)
+					for c := n.LastChild; c != nil; c = c.PrevSibling {
+						if c.Type == html.ElementNode {
+							result = append(result, c)
+							break
+						}
 					}
 
 				case content:
-					if n.parent.LastChild != nil {
-						result = append(result, n.parent.LastChild)
+					for c := n.parent.LastChild; c != nil; c = c.PrevSibling {
+						if c.Type == html.ElementNode {
+							result = append(result, c)
+							break
+						}
 					}
 
 				}
@@ -307,13 +319,19 @@ func (s *HTMLSender) transaction(c commands.TransactionCommand) {
 				switch n := node.(type) {
 
 				case *html.Node:
-					if n.NextSibling != nil {
-						result = append(result, n.NextSibling)
+					for c := n.NextSibling; c != nil; c = c.NextSibling {
+						if c.Type == html.ElementNode {
+							result = append(result, c)
+							break
+						}
 					}
 
 				case content:
-					if n.parent.NextSibling != nil {
-						result = append(result, n.parent.NextSibling)
+					for c := n.parent.NextSibling; c != nil; c = c.NextSibling {
+						if c.Type == html.ElementNode {
+							result = append(result, c)
+							break
+						}
 					}
 
 				}
@@ -330,13 +348,19 @@ func (s *HTMLSender) transaction(c commands.TransactionCommand) {
 				switch n := node.(type) {
 
 				case *html.Node:
-					if n.PrevSibling != nil {
-						result = append(result, n.PrevSibling)
+					for c := n.PrevSibling; c != nil; c = c.PrevSibling {
+						if c.Type == html.ElementNode {
+							result = append(result, c)
+							break
+						}
 					}
 
 				case content:
-					if n.parent.PrevSibling != nil {
-						result = append(result, n.parent.PrevSibling)
+					for c := n.parent.PrevSibling; c != nil; c = c.PrevSibling {
+						if c.Type == html.ElementNode {
+							result = append(result, c)
+							break
+						}
 					}
 
 				}
