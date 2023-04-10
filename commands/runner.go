@@ -9,14 +9,9 @@ import (
 	"github.com/manvalls/gosen/util"
 )
 
-type RunHandlerGetter interface {
-	RunHandler(url string) http.Handler
-}
-
 type Runner struct {
 	BaseRequest *http.Request
 	Header      http.Header
-	RunHandlerGetter
 }
 
 type RunnerWriter struct {
@@ -39,7 +34,7 @@ func (w *RunnerWriter) WriteHeader(statusCode int) {
 	w.statusCode = statusCode
 }
 
-func (r *Runner) Run(routine *Routine, url string) {
+func (r *Runner) Run(routine *Routine, handler http.Handler, url string) {
 	reqUrl := util.AddToQuery(url, "format=json")
 
 	req, err := http.NewRequestWithContext(
@@ -80,7 +75,6 @@ func (r *Runner) Run(routine *Routine, url string) {
 	req.Header.Set("x-forwarded-port", r.BaseRequest.Header.Get("x-forwarded-port"))
 	req.Header.Set("x-real-ip", r.BaseRequest.Header.Get("x-real-ip"))
 
-	handler := r.RunHandler(url)
 	if handler == nil {
 		res, err := http.DefaultClient.Do(req)
 		if err != nil {
@@ -102,7 +96,7 @@ func (r *Runner) Run(routine *Routine, url string) {
 	handler.ServeHTTP(rw, req)
 
 	if rw.statusCode/100 == 3 {
-		r.Run(routine, rw.header.Get("Location"))
+		r.Run(routine, handler, rw.header.Get("Location"))
 		return
 	}
 

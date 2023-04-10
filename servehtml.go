@@ -34,9 +34,8 @@ func (h *wrappedHandler) serveHTML(w http.ResponseWriter, r *http.Request, versi
 	}
 
 	runner := &commands.Runner{
-		RunHandlerGetter: h.app.RunHandlerGetter,
-		BaseRequest:      r,
-		Header:           header,
+		BaseRequest: r,
+		Header:      header,
 	}
 
 	p.Routine = commands.NewRoutine(sender, wg, runner)

@@ -8,16 +8,6 @@ import (
 	"github.com/manvalls/gosen/selectorcache"
 )
 
-type DefaultRunHandlerGetter struct{}
-
-func (d *DefaultRunHandlerGetter) RunHandler(url string) http.Handler {
-	if url[0] == '/' {
-		return http.DefaultServeMux
-	}
-
-	return nil
-}
-
 type VersionGetter interface {
 	Version() string
 }
@@ -27,7 +17,6 @@ type App struct {
 	Hydrate       bool
 	Version       string
 	selectorCache *selectorcache.SelectorCache
-	commands.RunHandlerGetter
 	VersionGetter
 }
 
@@ -87,11 +76,10 @@ func (v *versionGetter) Version() string {
 
 func NewApp() *App {
 	app := &App{
-		SSEKeepAlive:     15,
-		Hydrate:          true,
-		Version:          "",
-		RunHandlerGetter: &DefaultRunHandlerGetter{},
-		selectorCache:    selectorcache.New(),
+		SSEKeepAlive:  15,
+		Hydrate:       true,
+		Version:       "",
+		selectorCache: selectorcache.New(),
 	}
 
 	app.VersionGetter = &versionGetter{app}

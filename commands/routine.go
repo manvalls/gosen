@@ -2,6 +2,7 @@ package commands
 
 import (
 	"fmt"
+	"net/http"
 	"net/url"
 	"sync"
 
@@ -61,7 +62,7 @@ func (r *Routine) ForkFunc(f func(subroutine *Routine)) {
 	r.Fork(&funcThread{f})
 }
 
-func (r *Routine) Run(format string, args ...interface{}) {
+func (r *Routine) Run(handler http.Handler, format string, args ...interface{}) {
 	u := format
 
 	if len(args) > 0 {
@@ -78,7 +79,7 @@ func (r *Routine) Run(format string, args ...interface{}) {
 	}
 
 	if r.runner != nil {
-		r.runner.Run(r, u)
+		r.runner.Run(r, handler, u)
 		return
 	}
 
