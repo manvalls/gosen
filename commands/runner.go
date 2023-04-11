@@ -2,6 +2,7 @@ package commands
 
 import (
 	"bytes"
+	"context"
 	"io"
 	"net/http"
 	"strings"
@@ -9,14 +10,15 @@ import (
 	"github.com/manvalls/gosen/util"
 )
 
+var GosenRoutineKey = &struct{}{}
+
 type Runner struct {
 	BaseRequest *http.Request
-	Header      http.Header
+	MapRunURL   func(string) string
+	Handler     http.Handler
 }
 
 type RunnerWriter struct {
-	*Routine
-
 	writer     io.Writer
 	header     http.Header
 	statusCode int
@@ -34,13 +36,17 @@ func (w *RunnerWriter) WriteHeader(statusCode int) {
 	w.statusCode = statusCode
 }
 
-func (r *Runner) Run(routine *Routine, handler http.Handler, url string) {
-	reqUrl := util.AddToQuery(url, "format=json")
+func (r *Runner) Run(routine *Routine, url string) {
+	if r.MapRunURL != nil {
+		url = r.MapRunURL(url)
+	}
+
+	url = util.AddToQuery(url, "format=json")
 
 	req, err := http.NewRequestWithContext(
-		r.BaseRequest.Context(),
+		context.WithValue(r.BaseRequest.Context(), GosenRoutineKey, routine),
 		"GET",
-		reqUrl,
+		url,
 		strings.NewReader(""),
 	)
 
@@ -75,7 +81,7 @@ func (r *Runner) Run(routine *Routine, handler http.Handler, url string) {
 	req.Header.Set("x-forwarded-port", r.BaseRequest.Header.Get("x-forwarded-port"))
 	req.Header.Set("x-real-ip", r.BaseRequest.Header.Get("x-real-ip"))
 
-	if handler == nil {
+	if len(url) == 0 || url[0] != '/' || r.Handler == nil {
 		res, err := http.DefaultClient.Do(req)
 		if err != nil {
 			return
@@ -92,11 +98,11 @@ func (r *Runner) Run(routine *Routine, handler http.Handler, url string) {
 	}
 
 	buff := new(bytes.Buffer)
-	rw := &RunnerWriter{routine, buff, make(http.Header), 200}
-	handler.ServeHTTP(rw, req)
+	rw := &RunnerWriter{buff, make(http.Header), 200}
+	r.Handler.ServeHTTP(rw, req)
 
 	if rw.statusCode/100 == 3 {
-		r.Run(routine, handler, rw.header.Get("Location"))
+		r.Run(routine, rw.header.Get("Location"))
 		return
 	}
 
