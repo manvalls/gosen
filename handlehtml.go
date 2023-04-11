@@ -35,6 +35,7 @@ func handleHTML(c *gosenContext, r *http.Request) *Routine {
 
 	c.pending.Add(1)
 	go func() {
+		<-c.done
 		defer c.pending.Done()
 		wg.Wait()
 

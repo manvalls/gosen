@@ -30,7 +30,7 @@ func handleSSE(c *gosenContext, r *http.Request) *Routine {
 
 	sender := &ssesender.SSESender{
 		Mux:     mux,
-		Writter: c,
+		Writer:  c,
 		Flusher: flusher,
 	}
 

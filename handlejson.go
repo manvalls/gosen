@@ -9,13 +9,14 @@ import (
 
 func handleJSON(c *gosenContext) *Routine {
 	sender := &jsonsender.JSONSender{
-		Writter: c,
+		Writer: c,
 	}
 
 	wg := &sync.WaitGroup{}
 
 	c.pending.Add(1)
 	go func() {
+		<-c.done
 		defer c.pending.Done()
 		wg.Wait()
 		sender.End()

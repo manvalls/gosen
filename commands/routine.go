@@ -34,33 +34,6 @@ type RunCommand struct {
 	Routine uint64 `json:"routine,omitempty"`
 }
 
-func (r *Routine) runFork(sr *Routine, thread Thread) {
-	defer r.waitGroup.Done()
-	thread.Run(sr)
-}
-
-type Thread interface {
-	Run(subroutine *Routine)
-}
-
-func (r *Routine) Fork(thread Thread) {
-	r.waitGroup.Add(1)
-	subroutine := r.subroutine()
-	go r.runFork(subroutine, thread)
-}
-
-type funcThread struct {
-	f func(subroutine *Routine)
-}
-
-func (f *funcThread) Run(subroutine *Routine) {
-	f.f(subroutine)
-}
-
-func (r *Routine) ForkFunc(f func(subroutine *Routine)) {
-	r.Fork(&funcThread{f})
-}
-
 func (r *Routine) Run(format string, args ...interface{}) {
 	u := format
 
@@ -96,10 +69,23 @@ func (r *Routine) subroutine() *Routine {
 	return &Routine{r.sender, r.waitGroup, nextId, r.mux, r.nextId, r.runner}
 }
 
+func (r *Routine) Fork(f func(subroutine *Routine)) {
+	r.waitGroup.Add(1)
+	subroutine := r.subroutine()
+	go f(subroutine)
+}
+
 func (r *Routine) Tx() *Transaction {
 	return &Transaction{r.sender, nil, &sync.Mutex{}, 0, r.id, xxh3.New(), false}
 }
 
 func (r *Routine) Once() *Transaction {
 	return &Transaction{r.sender, nil, &sync.Mutex{}, 0, r.id, xxh3.New(), true}
+}
+
+func (r *Routine) SendEvent(e Event) {
+	evenrSender, ok := r.sender.(EventSender)
+	if ok {
+		evenrSender.SendEvent(e)
+	}
 }
