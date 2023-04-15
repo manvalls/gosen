@@ -63,16 +63,26 @@ type StartRoutineCommand struct {
 	Routine      uint64 `json:"routine,omitempty"`
 }
 
+type EndRoutineCommand struct {
+	EndRoutine uint64 `json:"endRoutine"`
+}
+
 func (r *Routine) subroutine() *Routine {
 	nextId := r.getNextId()
 	r.sender.SendCommand(StartRoutineCommand{nextId, r.id})
 	return &Routine{r.sender, r.waitGroup, nextId, r.mux, r.nextId, r.runner}
 }
 
+func runSubroutine(subroutine *Routine, f func(subroutine *Routine)) {
+	f(subroutine)
+	subroutine.sender.SendCommand(EndRoutineCommand{subroutine.id})
+	subroutine.waitGroup.Done()
+}
+
 func (r *Routine) Fork(f func(subroutine *Routine)) {
 	r.waitGroup.Add(1)
 	subroutine := r.subroutine()
-	go f(subroutine)
+	go runSubroutine(subroutine, f)
 }
 
 func (r *Routine) Tx() *Transaction {
