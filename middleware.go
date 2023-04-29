@@ -11,7 +11,7 @@ import (
 
 type Config struct {
 	SSEKeepAlive int
-	Hydrate      bool
+	noHydrate    bool
 	Version      string
 	VersionFunc  func() string
 	MapRunURL    func(string) string
@@ -68,7 +68,9 @@ func (h *gosenHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	c.pending.Wait()
 }
 
-func App(config Config) func(http.Handler) http.Handler {
+var App = AppWithConfig(Config{})
+
+func AppWithConfig(config Config) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return &gosenHandler{
 			config:        config,

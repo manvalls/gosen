@@ -18,11 +18,11 @@ func handleHTML(c *gosenContext, r *http.Request) *Routine {
 
 	html = htmlsender.NewHTMLSender(c.selectorCache)
 
-	if c.config.Hydrate {
+	if c.config.noHydrate {
+		sender = html
+	} else {
 		buffer = buffersender.NewBufferSender()
 		sender = multisender.NewMultiSender(buffer, html)
-	} else {
-		sender = html
 	}
 
 	wg := &sync.WaitGroup{}
@@ -39,7 +39,7 @@ func handleHTML(c *gosenContext, r *http.Request) *Routine {
 		defer c.pending.Done()
 		wg.Wait()
 
-		if c.config.Hydrate {
+		if !c.config.noHydrate {
 			cmdList := []any{}
 			for _, cmd := range buffer.Commands() {
 				switch c := cmd.(type) {
