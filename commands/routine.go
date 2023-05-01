@@ -34,11 +34,11 @@ type RunCommand struct {
 	Routine uint64 `json:"routine,omitempty"`
 }
 
-func (r *Routine) Run(format string, args ...interface{}) {
+func (r *Routine) Run(format string, args ...any) {
 	u := format
 
 	if len(args) > 0 {
-		escapedArgs := make([]interface{}, len(args))
+		escapedArgs := make([]any, len(args))
 		for i, arg := range args {
 			if str, ok := arg.(string); ok {
 				escapedArgs[i] = url.QueryEscape(str)

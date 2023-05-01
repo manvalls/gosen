@@ -35,6 +35,30 @@ func getSubCommand(v *fastjson.Value) any {
 		}
 	}
 
+	if v.Exists("elementId") {
+		elementId := v.GetStringBytes("elementId")
+		if elementId == nil {
+			return nil
+		}
+
+		return IdSubCommand{
+			Id:        v.GetUint64("id"),
+			ElementId: string(elementId),
+		}
+	}
+
+	if v.Exists("head") {
+		return HeadSubCommand{
+			Head: v.GetUint64("head"),
+		}
+	}
+
+	if v.Exists("body") {
+		return BodySubCommand{
+			Body: v.GetUint64("body"),
+		}
+	}
+
 	if v.Exists("fragment") {
 		fragment := v.GetStringBytes("fragment")
 		if fragment == nil {
@@ -304,6 +328,14 @@ func (r *Routine) UnmarshalJSON(data []byte) error {
 			r.sender.SendCommand(StartRoutineCommand{
 				StartRoutine: val.GetUint64("startRoutine"),
 				Routine:      getRoutine(val.GetUint64("routine")),
+			})
+
+			continue
+		}
+
+		if val.Exists("endRoutine") {
+			r.sender.SendCommand(EndRoutineCommand{
+				EndRoutine: val.GetUint64("endRoutine"),
 			})
 
 			continue

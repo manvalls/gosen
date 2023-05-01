@@ -13,7 +13,7 @@ type Node struct {
 
 // Selectors
 
-func (n Node) S(selector string, args ...interface{}) Node {
+func (n Node) S(selector string, args ...any) Node {
 
 	nextId := n.tx.getNextId()
 
@@ -26,7 +26,7 @@ func (n Node) S(selector string, args ...interface{}) Node {
 	return Node{n.tx, nextId}
 }
 
-func (n Node) All(selector string, args ...interface{}) Node {
+func (n Node) All(selector string, args ...any) Node {
 	nextId := n.tx.getNextId()
 
 	if len(args) > 0 {

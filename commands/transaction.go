@@ -12,7 +12,7 @@ import (
 
 type Transaction struct {
 	sender   CommandSender
-	commands []interface{}
+	commands []any
 	mux      *sync.Mutex
 	nextId   uint64
 	routine  uint64
@@ -184,7 +184,7 @@ type SelectorSubCommand struct {
 	Parent   uint64 `json:"parent,omitempty"`
 }
 
-func (t *Transaction) S(selector string, args ...interface{}) Node {
+func (t *Transaction) S(selector string, args ...any) Node {
 	nextId := t.getNextId()
 
 	if len(args) > 0 {
@@ -203,7 +203,7 @@ type SelectorAllSubCommand struct {
 	Parent      uint64 `json:"parent,omitempty"`
 }
 
-func (t *Transaction) All(selector string, args ...interface{}) Node {
+func (t *Transaction) All(selector string, args ...any) Node {
 	nextId := t.getNextId()
 
 	if len(args) > 0 {
@@ -212,6 +212,43 @@ func (t *Transaction) All(selector string, args ...interface{}) Node {
 	}
 
 	t.SendCommand(SelectorAllSubCommand{nextId, selector, false, 0})
+	return Node{t, nextId}
+}
+
+type IdSubCommand struct {
+	Id        uint64 `json:"id"`
+	ElementId string `json:"elementId"`
+}
+
+func (t *Transaction) Id(id string, args ...any) Node {
+	nextId := t.getNextId()
+
+	if len(args) > 0 {
+		t.SendCommand(IdSubCommand{nextId, fmt.Sprintf(id, args...)})
+		return Node{t, nextId}
+	}
+
+	t.SendCommand(IdSubCommand{nextId, id})
+	return Node{t, nextId}
+}
+
+type HeadSubCommand struct {
+	Head uint64 `json:"head"`
+}
+
+func (t *Transaction) Head() Node {
+	nextId := t.getNextId()
+	t.SendCommand(HeadSubCommand{nextId})
+	return Node{t, nextId}
+}
+
+type BodySubCommand struct {
+	Body uint64 `json:"body"`
+}
+
+func (t *Transaction) Body() Node {
+	nextId := t.getNextId()
+	t.SendCommand(BodySubCommand{nextId})
 	return Node{t, nextId}
 }
 

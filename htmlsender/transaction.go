@@ -208,6 +208,31 @@ func (s *HTMLSender) transaction(c commands.TransactionCommand) {
 			nodes[cmd.Id] = queryAll(nodes[cmd.Parent], sel)
 			s.txMux.RUnlock()
 
+		case commands.IdSubCommand:
+
+			s.txMux.RLock()
+
+			idNodes := s.idMap[cmd.ElementId]
+			if len(idNodes) > 0 {
+				nodes[cmd.Id] = []any{idNodes[0]}
+			} else {
+				nodes[cmd.Id] = []any{}
+			}
+
+			s.txMux.RUnlock()
+
+		case commands.HeadSubCommand:
+
+			s.txMux.RLock()
+			nodes[cmd.Head] = []any{s.head}
+			s.txMux.RUnlock()
+
+		case commands.BodySubCommand:
+
+			s.txMux.RLock()
+			nodes[cmd.Body] = []any{s.body}
+			s.txMux.RUnlock()
+
 		case commands.FragmentSubCommand:
 
 			nodes[cmd.Id] = []any{&fragment{template.WithFallback(cmd.Fragment).Fragment(nil)}}
@@ -448,24 +473,40 @@ func (s *HTMLSender) transaction(c commands.TransactionCommand) {
 				switch n := node.(type) {
 
 				case *html.Node:
+					connected := s.connected[n]
+
 					for c := n.FirstChild; c != nil; c = c.NextSibling {
 						n.RemoveChild(c)
+						if connected {
+							s.processRemovedNode(c)
+						}
 					}
 
 					for _, child := range template.WithFallback(cmd.Html).Fragment(n) {
 						n.AppendChild(child)
+						if connected {
+							s.processAddedNode(child)
+						}
 					}
 
 				case *fragment:
 					n.nodes = template.WithFallback(cmd.Html).Fragment(nil)
 
 				case content:
+					connected := s.connected[n.parent]
+
 					for c := n.parent.FirstChild; c != nil; c = c.NextSibling {
 						n.parent.RemoveChild(c)
+						if connected {
+							s.processRemovedNode(c)
+						}
 					}
 
 					for _, child := range template.WithFallback(cmd.Html).Fragment(n.parent) {
 						n.parent.AppendChild(child)
+						if connected {
+							s.processAddedNode(child)
+						}
 					}
 
 				}
@@ -484,11 +525,13 @@ func (s *HTMLSender) transaction(c commands.TransactionCommand) {
 				case *html.Node:
 					for i, attr := range n.Attr {
 						if attr.Key == cmd.Attr {
+							s.processAttrToBeChanged(n, cmd.Attr, cmd.Value, attr.Val)
 							n.Attr[i].Val = cmd.Value
 							continue loop
 						}
 					}
 
+					s.processAttrToBeChanged(n, cmd.Attr, cmd.Value, "")
 					n.Attr = append(n.Attr, html.Attribute{
 						Key: cmd.Attr,
 						Val: cmd.Value,
@@ -508,6 +551,7 @@ func (s *HTMLSender) transaction(c commands.TransactionCommand) {
 				case *html.Node:
 					for i, attr := range n.Attr {
 						if attr.Key == cmd.RemoveAttr {
+							s.processAttrToBeChanged(n, cmd.RemoveAttr, "", attr.Val)
 							n.Attr = append(n.Attr[:i], n.Attr[i+1:]...)
 							break
 						}
@@ -534,11 +578,15 @@ func (s *HTMLSender) transaction(c commands.TransactionCommand) {
 									continue addToAttrLoop
 								}
 							}
-							n.Attr[i].Val = attr.Val + " " + cmd.Value
+
+							newValue := attr.Val + " " + cmd.Value
+							s.processAttrToBeChanged(n, cmd.AddToAttr, newValue, attr.Val)
+							n.Attr[i].Val = newValue
 							continue addToAttrLoop
 						}
 					}
 
+					s.processAttrToBeChanged(n, cmd.AddToAttr, cmd.Value, "")
 					n.Attr = append(n.Attr, html.Attribute{
 						Key: cmd.AddToAttr,
 						Val: cmd.Value,
@@ -563,7 +611,9 @@ func (s *HTMLSender) transaction(c commands.TransactionCommand) {
 							for j, field := range fields {
 								if field == cmd.Value {
 									fields = append(fields[:j], fields[j+1:]...)
-									n.Attr[i].Val = strings.Join(fields, " ")
+									newValue := strings.Join(fields, " ")
+									s.processAttrToBeChanged(n, cmd.RemoveFromAttr, newValue, attr.Val)
+									n.Attr[i].Val = newValue
 									continue rmFromAttrLoop
 								}
 							}
@@ -583,11 +633,18 @@ func (s *HTMLSender) transaction(c commands.TransactionCommand) {
 
 				case *html.Node:
 					if n.Parent != nil {
+						if s.connected[n] {
+							s.processRemovedNode(n)
+						}
 						n.Parent.RemoveChild(n)
 					}
 
 				case content:
+					connected := s.connected[n.parent]
 					for c := n.parent.FirstChild; c != nil; c = c.NextSibling {
+						if connected {
+							s.processRemovedNode(c)
+						}
 						n.parent.RemoveChild(c)
 					}
 
@@ -605,6 +662,7 @@ func (s *HTMLSender) transaction(c commands.TransactionCommand) {
 				switch n := node.(type) {
 
 				case *html.Node:
+					connected := s.connected[n]
 					nodesToInsert := getNodesToInsert(nodes, cmd.InsertNodeBefore, len(parents) > 1)
 
 					for _, r := range nodes[cmd.Ref] {
@@ -614,6 +672,9 @@ func (s *HTMLSender) transaction(c commands.TransactionCommand) {
 						}
 
 						for _, ni := range nodesToInsert {
+							if connected {
+								s.processAddedNode(ni)
+							}
 							n.InsertBefore(ni, rn)
 						}
 
@@ -621,11 +682,15 @@ func (s *HTMLSender) transaction(c commands.TransactionCommand) {
 					}
 
 					for _, ni := range nodesToInsert {
+						if connected {
+							s.processAddedNode(ni)
+						}
 						n.AppendChild(ni)
 					}
 
 				case content:
 					nodesToInsert := getNodesToInsert(nodes, cmd.InsertNodeBefore, len(parents) > 1)
+					connected := s.connected[n.parent]
 
 					for _, r := range nodes[cmd.Ref] {
 						rn, ok := r.(*html.Node)
@@ -634,6 +699,9 @@ func (s *HTMLSender) transaction(c commands.TransactionCommand) {
 						}
 
 						for _, ni := range nodesToInsert {
+							if connected {
+								s.processAddedNode(ni)
+							}
 							n.parent.InsertBefore(ni, rn)
 						}
 
@@ -641,6 +709,9 @@ func (s *HTMLSender) transaction(c commands.TransactionCommand) {
 					}
 
 					for _, ni := range nodesToInsert {
+						if connected {
+							s.processAddedNode(ni)
+						}
 						n.parent.AppendChild(ni)
 					}
 
