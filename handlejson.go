@@ -14,13 +14,10 @@ func handleJSON(c *gosenContext) *Routine {
 
 	wg := &sync.WaitGroup{}
 
-	c.pending.Add(1)
-	go func() {
-		<-c.done
-		defer c.pending.Done()
+	c.done = func() {
 		wg.Wait()
 		sender.End()
-	}()
+	}
 
 	return commands.NewRoutine(sender, wg, nil)
 }

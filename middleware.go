@@ -29,12 +29,7 @@ type gosenContext struct {
 	routine *Routine
 	*gosenHandler
 	http.ResponseWriter
-
-	// WaitGroup for open pages
-	pending sync.WaitGroup
-
-	// Channel that gets closed when the request finishes
-	done chan struct{}
+	done func()
 }
 
 var gosenContextKey = &struct{}{}
@@ -58,14 +53,14 @@ func (h *gosenHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		gosenHandler:   h,
 		ResponseWriter: w,
 		mux:            sync.Mutex{},
-		pending:        sync.WaitGroup{},
-		done:           make(chan struct{}),
+		done:           nil,
 	}
 
 	gosenRequest := r.Clone(context.WithValue(r.Context(), gosenContextKey, c))
 	h.handler.ServeHTTP(w, gosenRequest)
-	close(c.done)
-	c.pending.Wait()
+	if c.done != nil {
+		c.done()
+	}
 }
 
 var App = AppWithConfig(Config{})

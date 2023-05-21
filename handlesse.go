@@ -34,5 +34,5 @@ func handleSSE(c *gosenContext, r *http.Request) *Routine {
 		Flusher: flusher,
 	}
 
-	return commands.NewRoutine(sender, &c.pending, nil)
+	return commands.NewRoutine(sender, &sync.WaitGroup{}, nil)
 }

@@ -30,14 +30,17 @@ func Handle(r *http.Request) *Routine {
 
 	if r.URL.Query().Get("format") == "json" {
 		c.Header().Set("Content-Type", "application/json")
-		return handleJSON(c)
+		c.routine = handleJSON(c)
+		return c.routine
 	}
 
 	if r.URL.Query().Get("format") == "sse" {
 		c.Header().Set("Content-Type", "text/event-stream")
-		return handleSSE(c, r)
+		c.routine = handleSSE(c, r)
+		return c.routine
 	}
 
 	c.Header().Set("Content-Type", "text/html")
-	return handleHTML(c, r)
+	c.routine = handleHTML(c, r)
+	return c.routine
 }

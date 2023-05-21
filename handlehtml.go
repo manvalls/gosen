@@ -33,10 +33,7 @@ func handleHTML(c *gosenContext, r *http.Request) *Routine {
 		Handler:     c.handler,
 	}
 
-	c.pending.Add(1)
-	go func() {
-		<-c.done
-		defer c.pending.Done()
+	c.done = func() {
 		wg.Wait()
 
 		if !c.config.noHydrate {
@@ -66,8 +63,11 @@ func handleHTML(c *gosenContext, r *http.Request) *Routine {
 			}
 		}
 
-		html.Render(c)
-	}()
+		err := html.Render(c)
+		if err != nil {
+			panic(err)
+		}
+	}
 
 	return commands.NewRoutine(sender, wg, runner)
 }
