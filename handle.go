@@ -40,7 +40,7 @@ func Handle(r *http.Request) *Routine {
 		return c.routine
 	}
 
-	c.Header().Set("Content-Type", "text/html")
+	c.Header().Set("Content-Type", "text/html; charset=utf-8")
 	c.routine = handleHTML(c, r)
 	return c.routine
 }
