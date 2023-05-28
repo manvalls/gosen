@@ -40,6 +40,6 @@ func (t *RawTemplate) Min() Template {
 	return &RawTemplate{text}
 }
 
-func Raw(text string) Template {
+func Raw(text string) *RawTemplate {
 	return &RawTemplate{text}
 }
