@@ -41,7 +41,7 @@ func Preload(t Template) Template {
 
 	h := xxh3.Hash(text)
 	hash := make([]byte, 8)
-	binary.PutUvarint(hash, h)
+	binary.LittleEndian.PutUint64(hash, h)
 
 	return &preloadedTemplate{
 		fragment: fragment,
