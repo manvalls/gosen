@@ -38,7 +38,7 @@ func (t *RawFileTemplate) Min() *MinRawFileTemplate {
 	}
 }
 
-func (t *RawFileTemplate) Preload() Template {
+func (t *RawFileTemplate) Preload() *RawTemplate {
 	file, err := t.fs.Open(t.fileName)
 	if err != nil {
 		panic(err)
@@ -94,7 +94,7 @@ type MinRawFileTemplate struct {
 	fileName string
 }
 
-func (t *MinRawFileTemplate) Preload() Template {
+func (t *MinRawFileTemplate) Preload() *RawTemplate {
 	file, err := t.fs.Open(t.fileName)
 	if err != nil {
 		panic(err)

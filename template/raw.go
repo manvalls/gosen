@@ -1,13 +1,18 @@
 package template
 
 import (
+	"html/template"
 	"io"
+	"strings"
+	"sync"
 
 	"golang.org/x/net/html"
 )
 
 type RawTemplate struct {
 	text string
+	mux  *sync.Mutex
+	tpl  *template.Template
 }
 
 func (t *RawTemplate) Fragment(context *html.Node) []*html.Node {
@@ -27,7 +32,7 @@ func (t *RawTemplate) WriteHash(w io.Writer) {
 	w.Write([]byte(t.text))
 }
 
-func (t *RawTemplate) Min() Template {
+func (t *RawTemplate) Min() *RawTemplate {
 	minifierMutex.Lock()
 	defer minifierMutex.Unlock()
 
@@ -37,9 +42,24 @@ func (t *RawTemplate) Min() Template {
 		panic(err)
 	}
 
-	return &RawTemplate{text}
+	return &RawTemplate{text, &sync.Mutex{}, nil}
+}
+
+func (t *RawTemplate) getTpl() *template.Template {
+	t.mux.Lock()
+	defer t.mux.Unlock()
+	if t.tpl == nil {
+		t.tpl = template.Must(template.New("").Parse(t.text))
+	}
+	return t.tpl
+}
+
+func (t *RawTemplate) Execute(data any) Template {
+	b := &strings.Builder{}
+	t.getTpl().Execute(b, data)
+	return Raw(b.String())
 }
 
 func Raw(text string) *RawTemplate {
-	return &RawTemplate{text}
+	return &RawTemplate{text, &sync.Mutex{}, nil}
 }
